@@ -59,7 +59,7 @@
     "build": "babel -d lib/ src/",
     "check-coverage": "node_modules/.bin/babel-node node_modules/.bin/istanbul check-coverage",
     "clean": "rimraf ./lib",
-    "codecov": "codecov -t TOKE",
+    "codecov": "codecov -t 7bb17be2-a4fc-495a-a25b-18399df92165",
     "compile": "npm run clean && npm run build",
     "coverage": "rm -rf coverage/ && npm run analyze-coverage && npm run check-coverage && npm run codecov",
     "lint": "eslint .",
