@@ -162,29 +162,6 @@ export default async function errorHandler(err) {
         if (hasFlash)
           this.flash('error', err.message);
 
-        /*
-        // NOTE: we don't need to do this anymore thanks to this PR
-        // https://github.com/koajs/generic-session/pull/95
-        //
-        // save the session and cookies manually because `refreshSession` is
-        // not reached when we throw an error or if `ctx.throw` is called
-        // https://goo.gl/GfO7bE (`refreshSession` is not reached)
-        if (hasSessions) {
-          await co.wrap(this.sessionStore.set).call(
-            this.sessionStore,
-            this.sessionId,
-            this.session
-          );
-          this.cookies.set(
-            // default to the cookie name as specified in `koa-generic-session`
-            // https://goo.gl/10obmT
-            this.app.context.cookiesKeyName || 'koa.sid',
-            this.sessionId,
-            this.session.cookie
-          );
-        }
-        */
-
         // redirect the user to the page they were just on
         this.redirect('back');
 

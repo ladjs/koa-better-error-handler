@@ -14,10 +14,6 @@ const app = new Koa();
 // define keys used for signing cookies
 app.keys = [ 'foo', 'bar' ];
 
-// specify the global cookies key name
-// for consumption by the error handler
-app.context.cookiesKeyName = 'koa.sid';
-
 // initialize redis store
 const redisClient = redis.createClient();
 redisClient.on('connect', () => app.emit('log', 'info', 'redis connected'));
@@ -30,8 +26,7 @@ const redisStore = new RedisStore({
 
 // add sessions to our app
 app.use(convert(session({
-  store: redisStore,
-  key: app.context.cookiesKeyName
+  store: redisStore
 })));
 
 // add support for flash messages (e.g. `req.flash('error', 'Oops!')`)
