@@ -1,0 +1,70 @@
+{
+  "name": "koa-better-error-handler",
+  "description": "Rate limiter middleware for koa",
+  "version": "1.0.0",
+  "author": "Nick Baugh <niftylettuce@gmail.com>",
+  "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
+  "dependencies": {
+    "boom": "github:niftylettuce/boom",
+    "co": "^4.6.0",
+    "debug": "^2.2.0",
+    "lodash": "^4.13.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.11.4",
+    "babel-polyfill": "^6.9.1",
+    "babel-preset-glazed": "0.0.2",
+    "chai": "^3.5.0",
+    "codecov": "^1.0.1",
+    "dirty-chai": "^1.2.2",
+    "eslint-config-glazed": "^0.0.7",
+    "istanbul": "^1.1.0-alpha.1",
+    "koa": "^2.0.0-alpha.3",
+    "koa-connect-flash": "^0.1.2",
+    "koa-convert": "^1.2.0",
+    "koa-generic-session": "^1.11.3",
+    "koa-redis": "^2.1.1",
+    "koa-router": "^7.0.1",
+    "mocha": "^2.5.3",
+    "redis": "^2.6.2",
+    "rimraf": "^2.5.4",
+    "supertest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">= 6.x"
+  },
+  "homepage": "https://github.com/niftylettuce/koa-better-error-handler",
+  "keywords": [
+    "async",
+    "await",
+    "better",
+    "boom",
+    "custom",
+    "error",
+    "error-handler",
+    "es7",
+    "flash",
+    "handler",
+    "koa",
+    "messages",
+    "override",
+    "promises",
+    "stripe"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "repository": "niftylettuce/koa-better-error-handler",
+  "scripts": {
+    "analyze-coverage": "node_modules/.bin/babel-node node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
+    "build": "babel -d lib/ src/",
+    "check-coverage": "node_modules/.bin/babel-node node_modules/.bin/istanbul check-coverage",
+    "clean": "rimraf ./lib",
+    "codecov": "codecov -t TOKE",
+    "compile": "npm run clean && npm run build",
+    "coverage": "rm -rf coverage/ && npm run analyze-coverage && npm run check-coverage && npm run codecov",
+    "lint": "eslint .",
+    "mocha": "NODE_ENV=test node_modules/.bin/_mocha",
+    "prepublish": "npm run compile && npm run test",
+    "test": "npm run lint && npm run compile && npm run coverage"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "presets": [ "glazed" ],
+  "sourceMaps": "inline"
+}
