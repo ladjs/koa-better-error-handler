@@ -4,9 +4,9 @@ import Router from 'koa-router';
 import request from 'supertest';
 import _ from 'lodash';
 import Koa from 'koa';
-import Boom from 'boom';
+import http from 'http';
 
-const statusCodes = _.keys(Boom.STATUS_CODES).map(code => {
+const statusCodes = _.keys(http.STATUS_CODES).map(code => {
   return parseInt(code, 10);
 }).filter(code => code >= 400);
 
