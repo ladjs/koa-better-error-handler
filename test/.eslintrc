@@ -1,3 +1,3 @@
 {
-  "extends": "glazed/mocha"
+  "extends": "crocodile/mocha"
 }

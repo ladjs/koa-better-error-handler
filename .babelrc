@@ -1,4 +1,4 @@
 {
-  "presets": [ "glazed" ],
+  "presets": [ "crocodile" ],
   "sourceMaps": "inline"
 }

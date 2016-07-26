@@ -1,7 +1,7 @@
 {
   "name": "koa-better-error-handler",
-  "description": "A better error-handler for Koa v2+, built for Glazed.  Makes `ctx.throw` beautiful again :sparkles!",
-  "version": "1.0.2",
+  "description": "A better error-handler for Koa v2+, built for CrocodileJS.  Makes `ctx.throw` beautiful again :sparkles!",
+  "version": "1.0.3",
   "author": "Nick Baugh <niftylettuce@gmail.com>",
   "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
   "dependencies": {
@@ -13,11 +13,11 @@
   "devDependencies": {
     "babel-cli": "^6.11.4",
     "babel-polyfill": "^6.9.1",
-    "babel-preset-glazed": "0.0.2",
+    "babel-preset-crocodile": "^1.0.0",
     "chai": "^3.5.0",
     "codecov": "^1.0.1",
     "dirty-chai": "^1.2.2",
-    "eslint-config-glazed": "^0.0.7",
+    "eslint-config-crocodile": "^1.0.0",
     "istanbul": "^1.1.0-alpha.1",
     "koa": "^2.0.0-alpha.3",
     "koa-connect-flash": "^0.1.2",

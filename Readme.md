@@ -8,7 +8,7 @@
 [![Standard JS Style][standard-image]][standard-url]
 [![MIT License][license-image]][license-url]
 
-> A better error-handler for Koa v2+, built for [Glazed][glazed-url].  Makes `ctx.throw` beautiful again :sparkles:!
+> A better error-handler for Koa v2+, built for [CrocodileJS][crocodile-url].  Makes `ctx.throw` beautiful again :sparkles:!
 
 
 ## Index
@@ -181,11 +181,11 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
 [license-url]: LICENSE
 [npm-image]: https://img.shields.io/npm/v/koa-better-error-handler.svg
 [npm-url]: https://npmjs.org/package/koa-better-error-handler
-[glazed-url]: http://glazed.io
+[crocodile-url]: https://crocodilejs.com
 [standard-image]: https://img.shields.io/badge/code%20style-standard%2Bes7-brightgreen.svg
-[standard-url]: https://github.com/glazedio/eslint-config-glazed
-[slack-image]: http://slack.glazed.io/badge.svg
-[slack-url]: http://slack.glazed.io
+[standard-url]: https://github.com/crocodilejs/eslint-config-crocodile
+[slack-image]: http://slack.crocodilejs.com/badge.svg
+[slack-url]: http://slack.crocodilejs.com
 [build-image]: https://semaphoreci.com/api/v1/niftylettuce/koa-better-error-handler/branches/master/shields_badge.svg
 [build-url]: https://semaphoreci.com/niftylettuce/koa-better-error-handler
 [codecoverage-image]: https://codecov.io/gh/niftylettuce/koa-better-error-handler/branch/master/graph/badge.svg
