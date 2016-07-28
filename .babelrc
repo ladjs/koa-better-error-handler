@@ -1,4 +1,7 @@
 {
   "presets": [ "crocodile" ],
+  "plugins": [
+    "transform-runtime"
+  ],
   "sourceMaps": "inline"
 }
