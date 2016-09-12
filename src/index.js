@@ -1,4 +1,5 @@
 
+import co from 'co';
 import util from 'util';
 import Debug from 'debug';
 import _ from 'lodash';
@@ -161,6 +162,34 @@ export default async function errorHandler(err) {
         // flash an error message
         if (hasFlash)
           this.flash('error', err.message);
+
+        // TODO: until the issue is resolved, we need to add this here
+        // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
+        if (this.sessionStore && this.sessionId && this.session && this.state.cookiesKey) {
+          await co.wrap(this.sessionStore.set).call(
+            this.sessionStore,
+            this.sessionId,
+            this.session
+          );
+          this.cookies.set(
+            this.state.cookiesKey,
+            this.sessionId,
+            this.session.cookie
+          );
+        }
+
+        /*
+        // if we're using `koa-session-store` we need to add
+        // `this._session = new Session()`, and then run this:
+        await co.wrap(this._session._store.save).call(
+          this._session._store,
+          this._session._sid,
+          JSON.stringify(this.session)
+        );
+        this.cookies.set(this._session._name, JSON.stringify({
+          _sid: this._session._sid
+        }), this._session._cookieOpts);
+        */
 
         // redirect the user to the page they were just on
         this.redirect('back');
