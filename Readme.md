@@ -19,6 +19,7 @@
   - [API](#api)
   - [Web App](#web-app)
 * [User-Friendly Responses](#user-friendly-responses)
+* [HTML Error Lists](#html-error-lists)
 * [License](#license)
 
 
@@ -29,8 +30,10 @@
 * Doesn't make all status codes 500 ([like the built-in Koa error handler does][gh-500-issue])
 * Supports Flash messages and preservation of newly set session object
 * Fixes annoying redirect issue where flash messages were lost upon an error being thrown
+* Supports [HTML Error Lists](#html-error-lists) using `<ul>` for Mongoose validation errors with more than one message
 * Makes `ctx.throw` beautiful messages (e.g. `ctx.throw(404)` will output a beautiful error object :hibiscus:)
 * Supports `text/html`, `application/json`, and `text` response types
+* Supports and recommends use of [mongoose-beautiful-unique-validation][mongoose-beautiful-unique-validation]
 
 
 ## Install
@@ -56,6 +59,9 @@ const app = new Koa();
 
 // override koa's undocumented error handler
 app.context.onerror = errorHandler;
+
+// specify that this is our api
+app.context.api = true;
 
 // set up some routes
 const router = new Router();
@@ -172,6 +178,33 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
 ```
 
 
+## HTML Error Lists
+
+If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoose validation error message occurs that has more than one message (e.g. multiple fields were invalid) &ndash; then `err.message` will be joined by a comma instead of by `<li>`.
+
+Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = true` before using this error handler.
+
+> With error lists:
+
+```json
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "<ul class=\"text-xs-left mb-0\"><li>Path `company_logo` is required.</li><li>Gig description must be 100-300 characters.</li></ul>"
+}
+```
+
+> Without error lists:
+
+```json
+{
+  "statusCode":400,
+  "error":"Bad Request",
+  "message":"Path `company_logo` is required., Gig description must be 100-300 characters."
+}
+```
+
+
 ## License
 
 [MIT][license-url]
@@ -193,3 +226,4 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
 [boom]: https://github.com/hapijs/boom
 [gh-issue]: https://github.com/koajs/koa/issues/571
 [gh-500-issue]: https://github.com/koajs/koa/blob/e4bcdecef295d7adbf5cce1bdc09adc0a24117b7/lib/context.js#L94-L140
+[mongoose-beautiful-unique-validation]: https://github.com/BohdanTkachenko/mongoose-beautiful-unique-validation

@@ -1,6 +1,5 @@
 
 import co from 'co';
-import util from 'util';
 import Debug from 'debug';
 import _ from 'lodash';
 import Boom from 'boom';
@@ -9,14 +8,6 @@ import path from 'path';
 
 const opts = {
   encoding: 'utf8'
-};
-
-const messages = {
-  'required': '%s is required',
-  'min': '%s below minimum',
-  'max': '%s above maximum',
-  'enum': '%s not an allowed value',
-  'Duplicate value': '%s already exists'
 };
 
 // error pages were inspired by HTML5 Boilerplate's default 404.html page
@@ -50,7 +41,7 @@ export default async function errorHandler(err) {
   }
 
   // parse mongoose validation errors
-  err = parseValidationError(err);
+  err = parseValidationError(this, err);
 
   // check if we threw just a status code in order to keep it simple
   const val = parseInt(err.message, 10);
@@ -87,8 +78,7 @@ export default async function errorHandler(err) {
   // populate the status and body with `boom` error message payload
   // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
   this.status = this.statusCode = err.statusCode = err.status = err.status || 500;
-  this.body = err.isBoom ?
-    err.output.payload : Boom.create(err.status, err.message).output.payload;
+  this.body = Boom.create(err.status, err.message).output.payload;
 
   debug('status code was %d', this.status);
 
@@ -198,7 +188,7 @@ export default async function errorHandler(err) {
       break;
     case 'json':
       this.type = 'json';
-      this.body = JSON.stringify(this.body);
+      this.body = JSON.stringify(this.body, null, 2);
       break;
     default:
       this.type = 'text';
@@ -211,35 +201,25 @@ export default async function errorHandler(err) {
 
 };
 
-function parseValidationError(err) {
+function parseValidationError(ctx, err) {
 
   // inspired by https://github.com/syntagma/mongoose-error-helper
   if (err.name !== 'ValidationError')
     return err;
 
-  // a ValidationError can contain more than one error
-  const errors = [];
+  ctx.api = true;
 
   // loop over the errors object of the Validation Error
-  _.each(err.errors, field => {
+  // with support for HTML error lists
+  if (_.values(err.errors).length === 1) {
+    err.message = _.values(err.errors)[0].message;
+  } else {
+    const errors = _.map(_.values(err.errors), 'message');
+    err.message = ctx.api ?
+      errors.join(', ')
+      : `<ul class="text-xs-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`;
+  }
 
-    // if a custom message is defined on the schema
-    if (_.isString(field.properties.message))
-      errors.push(field.message);
-    else if (!_.isString(messages[field.kind]))
-      // and if we don't have a message for `kind`
-      // then just push the error through
-      errors.push(field.message);
-    else
-      // otherwise use util.format to format message
-      // and pass the path for interpolation
-      errors.push(util.format(
-        messages[field.kind],
-        field.path
-      ));
-  });
-
-  err.message = errors.join(', ');
   return err;
 
 }

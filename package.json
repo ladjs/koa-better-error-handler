@@ -5,14 +5,14 @@
   "author": "Nick Baugh <niftylettuce@gmail.com>",
   "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
   "dependencies": {
-    "boom": "^3.2.2",
+    "boom": "^4.2.0",
     "co": "^4.6.0",
     "debug": "^2.2.0",
-    "lodash": "^4.13.1"
+    "lodash": "^4.16.4"
   },
   "devDependencies": {
-    "babel-cli": "^6.11.4",
-    "babel-plugin-transform-runtime": "^6.12.0",
+    "babel-cli": "^6.18.0",
+    "babel-plugin-transform-runtime": "^6.15.0",
     "babel-preset-crocodile": "^1.0.0",
     "chai": "^3.5.0",
     "codecov": "^1.0.1",
@@ -23,11 +23,11 @@
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
     "koa-generic-session": "^1.11.3",
-    "koa-redis": "^2.1.1",
+    "koa-redis": "^2.1.2",
     "koa-router": "^7.0.1",
-    "mocha": "^2.5.3",
+    "mocha": "^3.1.2",
     "redis": "^2.6.2",
-    "supertest": "^1.2.0"
+    "supertest": "^2.0.1"
   },
   "engines": {
     "node": ">= 6.x"
@@ -57,6 +57,7 @@
     "analyze-coverage": "node_modules/.bin/babel-node node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
     "check-coverage": "node_modules/.bin/babel-node node_modules/.bin/istanbul check-coverage",
     "compile": "rm -rf lib/ && babel -d lib src",
+    "watch": "babel -d lib src -w",
     "coverage": "rm -rf coverage/ && npm run analyze-coverage && npm run check-coverage && node_modules/.bin/codecov",
     "lint": "eslint .",
     "mocha": "NODE_ENV=test node_modules/.bin/_mocha",
