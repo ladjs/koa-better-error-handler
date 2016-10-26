@@ -182,7 +182,7 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
 
 If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoose validation error message occurs that has more than one message (e.g. multiple fields were invalid) &ndash; then `err.message` will be joined by a comma instead of by `<li>`.
 
-Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = true` before using this error handler.
+Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = false`, `ctx.api = false`, or simply make sure to not set them before using this error handler.
 
 > With error lists:
 
