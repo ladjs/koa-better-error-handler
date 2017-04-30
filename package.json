@@ -5,7 +5,7 @@
   "author": "Nick Baugh <niftylettuce@gmail.com>",
   "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
   "dependencies": {
-    "boom": "git+https://github.com/niftylettuce/boom.git",
+    "boom": "^4.3.1",
     "co": "^4.6.0",
     "debug": "^2.2.0",
     "lodash": "^4.16.4"
