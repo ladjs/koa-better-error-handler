@@ -1,7 +1,8 @@
 {
   "presets": [ "crocodile" ],
   "plugins": [
-    "transform-runtime"
+    "transform-runtime",
+    "add-module-exports"
   ],
   "sourceMaps": "inline"
 }
