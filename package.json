@@ -6,30 +6,30 @@
   "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "boom": "^4.3.1",
+    "boom": "^5.1.0",
     "co": "^4.6.0",
-    "debug": "^2.2.0",
-    "lodash": "^4.16.4"
+    "debug": "^2.6.8",
+    "lodash": "^4.17.4"
   },
   "devDependencies": {
-    "babel-cli": "^6.18.0",
+    "babel-cli": "^6.24.1",
     "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-transform-runtime": "^6.15.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-crocodile": "^1.0.0",
-    "chai": "^3.5.0",
-    "codecov": "^1.0.1",
-    "dirty-chai": "^1.2.2",
+    "chai": "^4.0.2",
+    "codecov": "^2.2.0",
+    "dirty-chai": "^2.0.0",
     "eslint-config-crocodile": "^1.0.0",
     "istanbul": "^1.1.0-alpha.1",
-    "koa": "^2.0.0-alpha.3",
+    "koa": "^2.3.0",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
-    "koa-generic-session": "^1.11.3",
-    "koa-redis": "^2.1.2",
-    "koa-router": "^7.0.1",
-    "mocha": "^3.1.2",
-    "redis": "^2.6.2",
-    "supertest": "^2.0.1"
+    "koa-generic-session": "^1.11.6",
+    "koa-redis": "^3.0.0",
+    "koa-router": "^7.2.1",
+    "mocha": "^3.4.2",
+    "redis": "^2.7.1",
+    "supertest": "^3.0.0"
   },
   "engines": {
     "node": ">= 6.x"
@@ -63,7 +63,7 @@
     "coverage": "rm -rf coverage/ && npm run analyze-coverage && npm run check-coverage && node_modules/.bin/codecov",
     "lint": "eslint .",
     "mocha": "NODE_ENV=test node_modules/.bin/_mocha",
-    "prepublish": "npm run test",
+    "publish": "npm run test",
     "test": "npm run lint && npm run compile && npm run coverage"
   }
 }
