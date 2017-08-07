@@ -226,4 +226,4 @@ Therefore if you _DO_ want your API error messages to return HTML formatted erro
 [boom]: https://github.com/hapijs/boom
 [gh-issue]: https://github.com/koajs/koa/issues/571
 [gh-500-issue]: https://github.com/koajs/koa/blob/e4bcdecef295d7adbf5cce1bdc09adc0a24117b7/lib/context.js#L94-L140
-[mongoose-beautiful-unique-validation]: https://github.com/BohdanTkachenko/mongoose-beautiful-unique-validation
+[mongoose-beautiful-unique-validation]: https://github.com/matteodelabre/mongoose-beautiful-unique-validation
