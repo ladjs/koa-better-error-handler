@@ -1,6 +1,8 @@
 
 # koa-better-error-handler
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/ladjs/koa-better-error-handler.svg)](https://greenkeeper.io/)
+
 [![Slack Status][slack-image]][slack-url]
 [![NPM version][npm-image]][npm-url]
 [![Build Status][build-image]][build-url]
