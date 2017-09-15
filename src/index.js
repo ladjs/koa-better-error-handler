@@ -1,4 +1,4 @@
-
+import s from 'underscore.string';
 import co from 'co';
 import Debug from 'debug';
 import _ from 'lodash';
@@ -26,11 +26,9 @@ const debug = new Debug('koa-better-error-handler');
 // https://goo.gl/8Z7aMe
 
 export default async function errorHandler(err) {
-
   if (!err) return;
 
-  if (!_.isError(err))
-    err = new Error(err);
+  if (!_.isError(err)) err = new Error(err);
 
   const type = this.accepts(['text', 'json', 'html']);
 
@@ -45,27 +43,26 @@ export default async function errorHandler(err) {
 
   // check if we threw just a status code in order to keep it simple
   const val = parseInt(err.message, 10);
-  if (_.isNumber(val) && val >= 400)
-    err = Boom.create(val);
+  if (_.isNumber(val) && val >= 400) err = Boom.create(val);
 
   // check if we have a boom error that specified
   // a status code already for us (and then use it)
   if (_.isObject(err.output) && _.isNumber(err.output.statusCode))
     err.status = err.output.statusCode;
 
-  if (!_.isNumber(err.status))
-    err.status = 500;
+  if (!_.isNumber(err.status)) err.status = 500;
 
   // check if there is flash messaging
   const hasFlash = _.isFunction(this.flash);
   debug('hasFlash', hasFlash);
 
   // check if there is session support
-  const hasSessions = _.isObject(this.session)
-    && _.isObject(this.sessionStore)
-    && _.isString(this.sessionId)
-    && _.isObject(this.session)
-    && _.isFunction(this.sessionStore.set);
+  const hasSessions =
+    _.isObject(this.session) &&
+    _.isObject(this.sessionStore) &&
+    _.isString(this.sessionId) &&
+    _.isObject(this.session) &&
+    _.isFunction(this.sessionStore.set);
   debug('hasSessions', hasSessions);
 
   // check if there is a view rendering engine binding `this.render`
@@ -77,7 +74,8 @@ export default async function errorHandler(err) {
 
   // populate the status and body with `boom` error message payload
   // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
-  this.status = this.statusCode = err.statusCode = err.status = err.status || 500;
+  this.status = this.statusCode = err.statusCode = err.status =
+    err.status || 500;
   this.body = Boom.create(err.status, err.message).output.payload;
 
   debug('status code was %d', this.status);
@@ -94,20 +92,19 @@ export default async function errorHandler(err) {
   }
 
   // fix page title and description
-  this.state.title = this.body.error;
-  debug('set `this.state.title` to %s', this.state.title);
-  this.state.desc = err.message;
-  debug('set `this.state.desc` to %s', this.state.desc);
+  this.state.meta = this.state.meta || {};
+  this.state.meta.title = this.body.error;
+  this.state.meta.description = err.message;
+  debug('set `this.state.meta.title` to %s', this.state.meta.title);
+  debug('set `this.state.meta.desc` to %s', this.state.meta.description);
 
   debug('type was %s', type);
 
   switch (type) {
     case 'html':
-
       this.type = 'html';
 
       if (this.status === 404) {
-
         // render the 404 page
         // https://github.com/koajs/koa/issues/646
         if (hasRender) {
@@ -121,18 +118,14 @@ export default async function errorHandler(err) {
         } else {
           this.body = _404;
         }
-
       } else if (noReferrer || this.status === 500) {
-
         // this prevents a redirect loop by detecting an empty Referrer
         // ...otherwise it would reach the next conditional block which
         // would endlessly rediret the user with `this.redirect('back')`
-        if (noReferrer)
-          debug('prevented endless redirect loop!');
+        if (noReferrer) debug('prevented endless redirect loop!');
 
         // flash an error message
-        if (hasFlash)
-          this.flash('error', err.message);
+        if (hasFlash) this.flash('error', err.message);
 
         // render the 500 page
         if (hasRender) {
@@ -146,21 +139,21 @@ export default async function errorHandler(err) {
         } else {
           this.body = _500;
         }
-
       } else {
-
         // flash an error message
-        if (hasFlash)
-          this.flash('error', err.message);
+        if (hasFlash) this.flash('error', err.message);
 
         // TODO: until the issue is resolved, we need to add this here
         // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
-        if (this.sessionStore && this.sessionId && this.session && this.state.cookiesKey) {
-          await co.wrap(this.sessionStore.set).call(
-            this.sessionStore,
-            this.sessionId,
-            this.session
-          );
+        if (
+          this.sessionStore &&
+          this.sessionId &&
+          this.session &&
+          this.state.cookiesKey
+        ) {
+          await co
+            .wrap(this.sessionStore.set)
+            .call(this.sessionStore, this.sessionId, this.session);
           this.cookies.set(
             this.state.cookiesKey,
             this.sessionId,
@@ -183,7 +176,6 @@ export default async function errorHandler(err) {
 
         // redirect the user to the page they were just on
         this.redirect('back');
-
       }
       break;
     case 'json':
@@ -198,16 +190,28 @@ export default async function errorHandler(err) {
 
   this.length = Buffer.byteLength(this.body);
   this.res.end(this.body);
-
-};
+}
 
 function parseValidationError(ctx, err) {
-
   // inspired by https://github.com/syntagma/mongoose-error-helper
-  if (err.name !== 'ValidationError')
-    return err;
+  if (err.name !== 'ValidationError') return err;
 
   ctx.api = true;
+
+  // transform the error messages to be humanized as adapted from:
+  // https://github.com/niftylettuce/mongoose-validation-error-transform
+  err.errors = _.map(err.errors, error => {
+    if (!_.isString(error.path)) {
+      error.message = s.capitalize(error.message);
+      return error;
+    }
+    error.message = error.message.replace(
+      new RegExp(error.path, 'g'),
+      s.humanize(error.path)
+    );
+    error.message = s.capitalize(error.message);
+    return error;
+  });
 
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
@@ -215,11 +219,12 @@ function parseValidationError(ctx, err) {
     err.message = _.values(err.errors)[0].message;
   } else {
     const errors = _.map(_.values(err.errors), 'message');
-    err.message = ctx.api ?
-      errors.join(', ')
-      : `<ul class="text-xs-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`;
+    err.message = ctx.api
+      ? errors.join(', ')
+      : `<ul class="text-xs-left mb-0"><li>${errors.join(
+          '</li><li>'
+        )}</li></ul>`;
   }
 
   return err;
-
 }
