@@ -8,7 +8,7 @@
 [![Standard JS Style][standard-image]][standard-url]
 [![MIT License][license-image]][license-url]
 
-> A better error-handler for Koa v2+, built for [CrocodileJS][crocodile-url].  Makes `ctx.throw` beautiful again :sparkles:!
+> A better error-handler for [Lad][] and [Koa][].  Makes `ctx.throw` awesome!
 
 
 ## Index
@@ -214,7 +214,6 @@ Therefore if you _DO_ want your API error messages to return HTML formatted erro
 [license-url]: LICENSE
 [npm-image]: https://img.shields.io/npm/v/koa-better-error-handler.svg
 [npm-url]: https://npmjs.org/package/koa-better-error-handler
-[crocodile-url]: https://crocodilejs.com
 [standard-image]: https://img.shields.io/badge/code%20style-standard%2Bes7-brightgreen.svg
 [standard-url]: https://github.com/crocodilejs/eslint-config-crocodile
 [slack-image]: http://slack.crocodilejs.com/badge.svg
@@ -227,3 +226,5 @@ Therefore if you _DO_ want your API error messages to return HTML formatted erro
 [gh-issue]: https://github.com/koajs/koa/issues/571
 [gh-500-issue]: https://github.com/koajs/koa/blob/e4bcdecef295d7adbf5cce1bdc09adc0a24117b7/lib/context.js#L94-L140
 [mongoose-beautiful-unique-validation]: https://github.com/matteodelabre/mongoose-beautiful-unique-validation
+[lad]: https://lad.js.org
+[koa]: http://koajs.com/
