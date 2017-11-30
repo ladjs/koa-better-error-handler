@@ -13,6 +13,9 @@ app.context.onerror = errorHandler;
 // specify that this is our api
 app.context.api = true;
 
+// use koa-404-handler
+app.use(koa404Handler);
+
 // set up some routes
 const router = new Router();
 
@@ -22,9 +25,6 @@ router.get('/500', ctx => ctx.throw(500));
 
 // initialize routes on the app
 app.use(router.routes());
-
-// use koa-404-handler
-app.use(koa404Handler);
 
 // start the server
 app.listen(3000);
