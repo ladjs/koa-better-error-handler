@@ -1,13 +1,17 @@
+const Koa = require('koa');
+const Router = require('koa-router');
+const koa404Handler = require('koa-404-handler');
 
-import errorHandler from '../';
-import Koa from 'koa';
-import Router from 'koa-router';
+const errorHandler = require('../');
 
 // initialize our app
 const app = new Koa();
 
 // override koa's undocumented error handler
 app.context.onerror = errorHandler;
+
+// specify that this is our api
+app.context.api = true;
 
 // set up some routes
 const router = new Router();
@@ -16,20 +20,11 @@ const router = new Router();
 router.get('/404', ctx => ctx.throw(404));
 router.get('/500', ctx => ctx.throw(500));
 
-// custom 404 handler since it's not already built in
-app.use(async (ctx, next) => {
-  try {
-    await next();
-    if (ctx.status === 404)
-      ctx.throw(404);
-  } catch (err) {
-    ctx.throw(err);
-    ctx.app.emit('error', err, ctx);
-  }
-});
-
 // initialize routes on the app
 app.use(router.routes());
+
+// use koa-404-handler
+app.use(koa404Handler);
 
 // start the server
 app.listen(3000);

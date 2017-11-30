@@ -1,10 +1,10 @@
-import s from 'underscore.string';
-import co from 'co';
-import Debug from 'debug';
-import _ from 'lodash';
-import Boom from 'boom';
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
+const s = require('underscore.string');
+const co = require('co');
+const Debug = require('debug');
+const _ = require('lodash');
+const Boom = require('boom');
 
 const opts = {
   encoding: 'utf8'
@@ -25,7 +25,8 @@ const debug = new Debug('koa-better-error-handler');
 // https://goo.gl/62oU7P
 // https://goo.gl/8Z7aMe
 
-export default async function errorHandler(err) {
+// eslint-disable-next-line complexity
+async function errorHandler(err) {
   if (!err) return;
 
   if (!_.isError(err)) err = new Error(err);
@@ -74,9 +75,11 @@ export default async function errorHandler(err) {
 
   // populate the status and body with `boom` error message payload
   // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
-  this.status = this.statusCode = err.statusCode = err.status =
-    err.status || 500;
-  this.body = Boom.create(err.status, err.message).output.payload;
+  err.status = err.status || 500;
+  err.statusCode = err.status;
+  this.statusCode = err.statusCode;
+  this.status = this.statusCode;
+  this.body = new Boom(err.message, { statusCode: err.status }).output.payload;
 
   debug('status code was %d', this.status);
 
@@ -228,3 +231,5 @@ function parseValidationError(ctx, err) {
 
   return err;
 }
+
+module.exports = errorHandler;

@@ -1,42 +1,48 @@
 {
   "name": "koa-better-error-handler",
   "description":
-    "A better error-handler for Koa v2+, built for CrocodileJS.  Makes `ctx.throw` beautiful again :sparkles!",
+    "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
   "version": "1.3.0",
   "author": "Nick Baugh <niftylettuce@gmail.com>",
-  "bugs": "https://github.com/niftylettuce/koa-better-error-handler/issues",
+  "bugs": "https://github.com/ladjs/koa-better-error-handler/issues",
   "dependencies": {
     "babel-runtime": "^6.23.0",
-    "boom": "^5.1.0",
+    "boom": "^7.1.1",
     "co": "^4.6.0",
     "debug": "^3.0.1",
     "lodash": "^4.17.4",
     "underscore.string": "^3.3.4"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.1",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-crocodile": "^1.0.0",
-    "chai": "^4.0.2",
-    "codecov": "^2.2.0",
-    "dirty-chai": "^2.0.0",
-    "eslint-config-crocodile": "^1.0.0",
-    "istanbul": "^1.1.0-alpha.1",
+    "ava": "^0.24.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "codecov": "^3.0.0",
+    "cross-env": "^5.1.1",
+    "eslint": "^4.12.1",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.3.1",
+    "husky": "^0.14.3",
     "koa": "^2.3.0",
+    "koa-404-handler": "^0.0.1",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
     "koa-generic-session": "^2.0.0",
     "koa-redis": "^3.0.0",
     "koa-router": "^7.2.1",
-    "mocha": "^3.4.2",
+    "lint-staged": "^5.0.0",
+    "nyc": "^11.3.0",
+    "prettier": "^1.8.2",
     "redis": "^2.7.1",
-    "supertest": "^3.0.0"
+    "remark-cli": "^4.0.0",
+    "remark-preset-github": "^0.0.7",
+    "supertest": "^3.0.0",
+    "xo": "^0.18.2"
   },
   "engines": {
-    "node": ">= 6.x"
+    "node": ">= 6.4.0"
   },
-  "homepage": "https://github.com/niftylettuce/koa-better-error-handler",
+  "homepage": "https://github.com/ladjs/koa-better-error-handler",
   "keywords": [
     "async",
     "await",
@@ -52,23 +58,63 @@
     "messages",
     "override",
     "promises",
-    "stripe"
+    "stripe",
+    "404",
+    "500",
+    "ctx",
+    "context",
+    "errors",
+    "handling"
   ],
   "license": "MIT",
   "main": "lib/index.js",
-  "repository": "niftylettuce/koa-better-error-handler",
+  "lint-staged": {
+    "*.{js,jsx,mjs,ts,tsx,css,less,scss,json,graphql}": [
+      "prettier --write --single-quote --trailing-comma none",
+      "git add"
+    ],
+    "*.md": ["remark . -qfo", "git add"]
+  },
+  "files": ["lib", "locales"],
+  "remarkConfig": {
+    "plugins": ["preset-github"]
+  },
+  "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "analyze-coverage":
-      "node_modules/.bin/babel-node node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
-    "check-coverage":
-      "node_modules/.bin/babel-node node_modules/.bin/istanbul check-coverage",
-    "compile": "rm -rf lib/ && babel -d lib src",
-    "watch": "babel -d lib src -w",
-    "coverage":
-      "rm -rf coverage/ && npm run analyze-coverage && npm run check-coverage && node_modules/.bin/codecov",
-    "lint": "eslint .",
-    "mocha": "NODE_ENV=test node_modules/.bin/_mocha",
-    "publish": "npm run test",
-    "test": "npm run lint && npm run compile && npm run coverage"
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "lint": "xo && remark . -qfo",
+    "precommit": "lint-staged && npm test",
+    "test": "npm run build && npm run lint && npm run test-coverage",
+    "test-coverage": "cross-env NODE_ENV=test nyc ava",
+    "build": "node_modules/.bin/babel src --out-dir lib",
+    "watch": "node_modules/.bin/babel src --watch --out-dir lib"
+  },
+  "xo": {
+    "extends": "prettier",
+    "plugins": ["prettier"],
+    "parserOptions": {
+      "sourceType": "script"
+    },
+    "rules": {
+      "prettier/prettier": [
+        "error",
+        {
+          "singleQuote": true,
+          "bracketSpacing": true,
+          "trailingComma": "none"
+        }
+      ],
+      "max-len": [
+        "error",
+        {
+          "code": 80,
+          "ignoreUrls": true
+        }
+      ],
+      "capitalized-comments": "off",
+      "camelcase": "off",
+      "no-warning-comments": "off"
+    },
+    "space": true
   }
 }

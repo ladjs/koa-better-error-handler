@@ -1,18 +1,19 @@
+const Koa = require('koa');
+const redis = require('redis');
+const RedisStore = require('koa-redis');
+const session = require('koa-generic-session');
+const flash = require('koa-connect-flash');
+const convert = require('koa-convert');
+const Router = require('koa-router');
+const koa404Handler = require('koa-404-handler');
 
-import errorHandler from '../';
-import Koa from 'koa';
-import redis from 'redis';
-import RedisStore from 'koa-redis';
-import session from 'koa-generic-session';
-import flash from 'koa-connect-flash';
-import convert from 'koa-convert';
-import Router from 'koa-router';
+const errorHandler = require('../');
 
 // initialize our app
 const app = new Koa();
 
 // define keys used for signing cookies
-app.keys = [ 'foo', 'bar' ];
+app.keys = ['foo', 'bar'];
 
 // initialize redis store
 const redisClient = redis.createClient();
@@ -25,9 +26,13 @@ const redisStore = new RedisStore({
 });
 
 // add sessions to our app
-app.use(convert(session({
-  store: redisStore
-})));
+app.use(
+  convert(
+    session({
+      store: redisStore
+    })
+  )
+);
 
 // add support for flash messages (e.g. `req.flash('error', 'Oops!')`)
 app.use(convert(flash()));
@@ -45,17 +50,8 @@ router.get('/500', ctx => ctx.throw(500));
 // initialize routes on the app
 app.use(router.routes());
 
-// custom 404 handler since it's not already built in
-app.use(async (ctx, next) => {
-  try {
-    await next();
-    if (ctx.status === 404)
-      ctx.throw(404);
-  } catch (err) {
-    ctx.throw(err);
-    ctx.app.emit('error', err, ctx);
-  }
-});
+// use koa-404-handler
+app.use(koa404Handler);
 
 // start the server
 app.listen(3000);

@@ -1,14 +1,13 @@
-
 # koa-better-error-handler
 
-[![Slack Status][slack-image]][slack-url]
-[![NPM version][npm-image]][npm-url]
-[![Build Status][build-image]][build-url]
-[![Code Coverage][codecoverage-image]][codecoverage-url]
-[![Standard JS Style][standard-image]][standard-url]
-[![MIT License][license-image]][license-url]
+[![build status](https://img.shields.io/travis/ladjs/koa-better-error-handler.svg)](https://travis-ci.org/ladjs/koa-better-error-handler)
+[![code coverage](https://img.shields.io/codecov/c/github/ladjs/koa-better-error-handler.svg)](https://codecov.io/gh/ladjs/koa-better-error-handler)
+[![code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
+[![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+[![made with lass](https://img.shields.io/badge/made_with-lass-95CC28.svg)](https://lass.js.org)
+[![license](https://img.shields.io/github/license/ladjs/koa-better-error-handler.svg)](LICENSE)
 
-> A better error-handler for [Lad][] and [Koa][].  Makes `ctx.throw` awesome!
+> A better error-handler for [Lad][] and [Koa][].  Makes `ctx.throw` awesome (best used with [koa-404-handler][])
 
 
 ## Index
@@ -16,8 +15,8 @@
 * [Features](#features)
 * [Install](#install)
 * [Usage](#usage)
-  - [API](#api)
-  - [Web App](#web-app)
+  * [API](#api)
+  * [Web App](#web-app)
 * [User-Friendly Responses](#user-friendly-responses)
 * [HTML Error Lists](#html-error-lists)
 * [License](#license)
@@ -45,14 +44,17 @@ npm install --save koa-better-error-handler
 
 ## Usage
 
+> You should probably be using this in combination with [koa-404-handler][] too!
+
 ### API
 
 > No support for sessions, cookies, or flash messaging:
 
 ```js
-import errorHandler from 'koa-better-error-handler';
-import Koa from 'koa';
-import Router from 'koa-router';
+const errorHandler = require('koa-better-error-handler');
+const Koa = require('koa');
+const Router = require('koa-router');
+const koa404Handler = require('koa-404-handler');
 
 // initialize our app
 const app = new Koa();
@@ -73,17 +75,8 @@ router.get('/500', ctx => ctx.throw(500));
 // initialize routes on the app
 app.use(router.routes());
 
-// custom 404 handler since it's not already built in
-app.use(async (ctx, next) => {
-  try {
-    await next();
-    if (ctx.status === 404)
-      ctx.throw(404);
-  } catch (err) {
-    ctx.throw(err);
-    ctx.app.emit('error', err, ctx);
-  }
-});
+// use koa-404-handler
+app.use(koa404Handler);
 
 // start the server
 app.listen(3000);
@@ -95,20 +88,21 @@ console.log('listening on port 3000');
 > Built-in support for sessions, cookies, and flash messaging:
 
 ```js
-import errorHandler from 'koa-better-error-handler';
-import Koa from 'koa';
-import redis from 'redis';
-import RedisStore from 'koa-redis';
-import session from 'koa-generic-session';
-import flash from 'koa-connect-flash';
-import convert from 'koa-convert';
-import Router from 'koa-router';
+const errorHandler = require('koa-better-error-handler');
+const Koa = require('koa');
+const redis = require('redis');
+const RedisStore = require('koa-redis');
+const session = require('koa-generic-session');
+const flash = require('koa-connect-flash');
+const convert = require('koa-convert');
+const Router = require('koa-router');
+const koa404Handler = require('koa-404-handler');
 
 // initialize our app
 const app = new Koa();
 
 // define keys used for signing cookies
-app.keys = [ 'foo', 'bar' ];
+app.keys = ['foo', 'bar'];
 
 // initialize redis store
 const redisClient = redis.createClient();
@@ -121,9 +115,13 @@ const redisStore = new RedisStore({
 });
 
 // add sessions to our app
-app.use(convert(session({
-  store: redisStore
-})));
+app.use(
+  convert(
+    session({
+      store: redisStore
+    })
+  )
+);
 
 // add support for flash messages (e.g. `req.flash('error', 'Oops!')`)
 app.use(convert(flash()));
@@ -141,17 +139,8 @@ router.get('/500', ctx => ctx.throw(500));
 // initialize routes on the app
 app.use(router.routes());
 
-// custom 404 handler since it's not already built in
-app.use(async (ctx, next) => {
-  try {
-    await next();
-    if (ctx.status === 404)
-      ctx.throw(404);
-  } catch (err) {
-    ctx.throw(err);
-    ctx.app.emit('error', err, ctx);
-  }
-});
+// use koa-404-handler
+app.use(koa404Handler);
 
 // start the server
 app.listen(3000);
@@ -180,7 +169,7 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
 
 ## HTML Error Lists
 
-If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoose validation error message occurs that has more than one message (e.g. multiple fields were invalid) &ndash; then `err.message` will be joined by a comma instead of by `<li>`.
+If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoose validation error message occurs that has more than one message (e.g. multiple fields were invalid) – then `err.message` will be joined by a comma instead of by `<li>`.
 
 Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = false`, `ctx.api = false`, or simply make sure to not set them before using this error handler.
 
@@ -207,24 +196,21 @@ Therefore if you _DO_ want your API error messages to return HTML formatted erro
 
 ## License
 
-[MIT][license-url]
+[MIT](LICENSE) © Nick Baugh
 
 
-[license-image]: http://img.shields.io/badge/license-MIT-blue.svg
-[license-url]: LICENSE
-[npm-image]: https://img.shields.io/npm/v/koa-better-error-handler.svg
-[npm-url]: https://npmjs.org/package/koa-better-error-handler
-[standard-image]: https://img.shields.io/badge/code%20style-standard%2Bes7-brightgreen.svg
-[standard-url]: https://github.com/crocodilejs/eslint-config-crocodile
-[slack-image]: http://slack.crocodilejs.com/badge.svg
-[slack-url]: http://slack.crocodilejs.com
-[build-image]: https://semaphoreci.com/api/v1/niftylettuce/koa-better-error-handler/branches/master/shields_badge.svg
-[build-url]: https://semaphoreci.com/niftylettuce/koa-better-error-handler
-[codecoverage-image]: https://codecov.io/gh/niftylettuce/koa-better-error-handler/branch/master/graph/badge.svg
-[codecoverage-url]: https://codecov.io/gh/niftylettuce/koa-better-error-handler
+## 
+
 [boom]: https://github.com/hapijs/boom
+
 [gh-issue]: https://github.com/koajs/koa/issues/571
+
 [gh-500-issue]: https://github.com/koajs/koa/blob/e4bcdecef295d7adbf5cce1bdc09adc0a24117b7/lib/context.js#L94-L140
+
 [mongoose-beautiful-unique-validation]: https://github.com/matteodelabre/mongoose-beautiful-unique-validation
+
 [lad]: https://lad.js.org
+
 [koa]: http://koajs.com/
+
+[koa-404-handler]: https://github.com/ladjs/koa-404-handler
