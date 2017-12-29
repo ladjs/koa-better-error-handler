@@ -73,6 +73,15 @@ async function errorHandler(err) {
   // check if we're about to go into a possible endless redirect loop
   const noReferrer = this.get('Referrer') === '';
 
+  // nothing we can do here other
+  // than delegate to the app-level
+  // handler and log.
+  if (this.headerSent || !this.writable) {
+    debug('headers were already sent, returning early');
+    err.headerSent = true;
+    return;
+  }
+
   // populate the status and body with `boom` error message payload
   // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
   err.status = err.status || 500;
@@ -84,15 +93,6 @@ async function errorHandler(err) {
   debug('status code was %d', this.status);
 
   this.app.emit('error', err, this);
-
-  // nothing we can do here other
-  // than delegate to the app-level
-  // handler and log.
-  if (this.headerSent || !this.writable) {
-    debug('headers were already sent, returning early');
-    err.headerSent = true;
-    return;
-  }
 
   // fix page title and description
   this.state.meta = this.state.meta || {};

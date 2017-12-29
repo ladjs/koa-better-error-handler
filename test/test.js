@@ -34,6 +34,13 @@ test.beforeEach(t => {
     router.get(`/${code}`, ctx => ctx.throw(code));
   });
 
+  router.get('/break-headers-sent', ctx => {
+    ctx.type = 'text/html';
+    ctx.body = 'foo';
+    ctx.res.end();
+    ctx.throw(404);
+  });
+
   // initialize routes on the app
   t.context.app.use(router.routes());
 
@@ -53,4 +60,12 @@ _.each(['text/html', 'application/json', 'text/plain'], type => {
         .end(t.end);
     });
   });
+});
+
+test.cb("Won't throw after sending headers", t => {
+  request(t.context.app.listen())
+    .get('/break-headers-sent')
+    .set('Accept', 'text/html')
+    .expect(200)
+    .end(t.end);
 });
