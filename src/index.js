@@ -88,7 +88,7 @@ async function errorHandler(err) {
   err.statusCode = err.status;
   this.statusCode = err.statusCode;
   this.status = this.statusCode;
-  this.body = new Boom(err.message, { statusCode: err.status }).output.payload;
+  this.body = Boom.create(err.status, err.message).output.payload;
 
   debug('status code was %d', this.status);
 
