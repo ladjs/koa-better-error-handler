@@ -23,7 +23,7 @@
     "eslint-plugin-prettier": "^2.3.1",
     "husky": "^0.14.3",
     "koa": "^2.3.0",
-    "koa-404-handler": "^0.0.1",
+    "koa-404-handler": "^0.0.2",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
     "koa-generic-session": "^2.0.0",
