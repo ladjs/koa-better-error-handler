@@ -6,7 +6,6 @@
   "author": "Nick Baugh <niftylettuce@gmail.com>",
   "bugs": "https://github.com/ladjs/koa-better-error-handler/issues",
   "dependencies": {
-    "babel-runtime": "^6.23.0",
     "boom": "^5.1.0",
     "co": "^4.6.0",
     "debug": "^3.0.1",
