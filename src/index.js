@@ -199,8 +199,6 @@ function parseValidationError(ctx, err) {
   // inspired by https://github.com/syntagma/mongoose-error-helper
   if (err.name !== 'ValidationError') return err;
 
-  ctx.api = true;
-
   // transform the error messages to be humanized as adapted from:
   // https://github.com/niftylettuce/mongoose-validation-error-transform
   err.errors = _.map(err.errors, error => {
