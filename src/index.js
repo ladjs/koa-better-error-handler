@@ -90,6 +90,11 @@ async function errorHandler(err) {
   this.status = this.statusCode;
   this.body = Boom.create(err.status, err.message).output.payload;
 
+  // set any additional error headers specified
+  // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
+  if (_.isObject(err.headers) && Object.keys(err.headers).length > 0)
+    this.set(err.headers);
+
   debug('status code was %d', this.status);
 
   this.app.emit('error', err, this);

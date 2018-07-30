@@ -173,6 +173,16 @@ If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoo
 
 Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = false`, `ctx.api = false`, or simply make sure to not set them before using this error handler.
 
+```js
+try {
+  // trigger manual validation
+  // (this allows us to have a 400 error code instead of 500)
+  await company.validate();
+} catch (err) {
+  ctx.throw(Boom.badRequest(err));
+}
+```
+
 > With error lists:
 
 ```json

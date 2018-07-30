@@ -5,6 +5,7 @@ const request = require('supertest');
 const Koa = require('koa');
 const _ = require('lodash');
 const koa404Handler = require('koa-404-handler');
+const auth = require('koa-basic-auth');
 
 const errorHandler = require('../lib');
 
@@ -32,6 +33,10 @@ test.beforeEach(t => {
   // throw an error anywhere you want!
   _.each(statusCodes, code => {
     router.get(`/${code}`, ctx => ctx.throw(code));
+  });
+
+  router.get('/basic-auth', auth({ name: 'tj', pass: 'tobi' }), ctx => {
+    ctx.body = 'Hello World';
   });
 
   router.get('/break-headers-sent', ctx => {
@@ -67,5 +72,13 @@ test.cb("Won't throw after sending headers", t => {
     .get('/break-headers-sent')
     .set('Accept', 'text/html')
     .expect(200)
+    .end(t.end);
+});
+
+test.cb('Throws with WWW-Authenticate header on basic auth fail', t => {
+  request(t.context.app.listen())
+    .get('/basic-auth')
+    .expect('WWW-Authenticate', 'Basic realm="Secure Area"')
+    .expect(401)
     .end(t.end);
 });

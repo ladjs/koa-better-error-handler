@@ -888,6 +888,12 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
+basic-auth@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/basic-auth/-/basic-auth-2.0.0.tgz#015db3f353e02e56377755f962742e8981e7bbba"
+  dependencies:
+    safe-buffer "5.1.1"
+
 bcrypt-pbkdf@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/bcrypt-pbkdf/-/bcrypt-pbkdf-1.0.1.tgz#63bc5dcb61331b92bc05fd528953c33462a06f8d"
@@ -3071,6 +3077,13 @@ kind-of@^4.0.0:
 koa-404-handler@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/koa-404-handler/-/koa-404-handler-0.0.2.tgz#a6b4350099560fb3042db3e57a39094b661bc558"
+
+"koa-basic-auth@https://github.com/niftylettuce/basic-auth":
+  version "3.0.0"
+  resolved "https://github.com/niftylettuce/basic-auth#fb029989f2d849beb5181d21f4bb8be8db0e2fd1"
+  dependencies:
+    basic-auth "^2.0.0"
+    tsscmp "git+https://github.com/niftylettuce/tsscmp.git"
 
 koa-compose@^3.0.0:
   version "3.2.1"
@@ -5272,7 +5285,7 @@ rxjs@^5.4.2:
   dependencies:
     symbol-observable "1.0.1"
 
-safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
+safe-buffer@5.1.1, safe-buffer@^5.0.1, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
 
@@ -5752,6 +5765,10 @@ trim@0.0.1:
 trough@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/trough/-/trough-1.0.1.tgz#a9fd8b0394b0ae8fff82e0633a0a36ccad5b5f86"
+
+"tsscmp@git+https://github.com/niftylettuce/tsscmp.git":
+  version "1.0.5"
+  resolved "git+https://github.com/niftylettuce/tsscmp.git#46ac4edb9d76e0b376acad9247a7e44988ae135d"
 
 tunnel-agent@^0.6.0:
   version "0.6.0"

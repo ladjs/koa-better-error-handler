@@ -24,6 +24,7 @@
     "husky": "^0.14.3",
     "koa": "^2.3.0",
     "koa-404-handler": "^0.0.2",
+    "koa-basic-auth": "https://github.com/niftylettuce/basic-auth",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
     "koa-generic-session": "^2.0.0",
