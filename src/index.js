@@ -119,7 +119,7 @@ async function errorHandler(err) {
           try {
             debug('rendering 404 page');
             await this.render('404');
-          } catch (err) {
+          } catch (err2) {
             debug('could not find 404 page, using built-in 404 html');
             this.body = _404;
           }
@@ -140,7 +140,7 @@ async function errorHandler(err) {
           try {
             debug('rendering 500 page');
             await this.render('500');
-          } catch (err) {
+          } catch (err2) {
             debug('could not find 500 page, using built-in 500 html');
             this.body = _500;
           }
@@ -185,13 +185,14 @@ async function errorHandler(err) {
         // redirect the user to the page they were just on
         this.redirect('back');
       }
+
       break;
     case 'json':
       this.type = 'json';
       this.body = JSON.stringify(this.body, null, 2);
       break;
     default:
-      this.type = 'text';
+      this.type = this.api ? 'json' : 'text';
       this.body = JSON.stringify(this.body, null, 2);
       break;
   }
@@ -211,6 +212,7 @@ function parseValidationError(ctx, err) {
       error.message = s.capitalize(error.message);
       return error;
     }
+
     error.message = error.message.replace(
       new RegExp(error.path, 'g'),
       s.humanize(error.path)

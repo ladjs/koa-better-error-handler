@@ -1,119 +1,125 @@
 {
   "name": "koa-better-error-handler",
-  "description":
-    "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
+  "description": "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
   "version": "1.3.6",
   "author": "Nick Baugh <niftylettuce@gmail.com>",
   "bugs": "https://github.com/ladjs/koa-better-error-handler/issues",
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
   "dependencies": {
-    "boom": "^5.1.0",
+    "boom": "5.1.0",
     "co": "^4.6.0",
-    "debug": "^3.0.1",
-    "lodash": "^4.17.4",
-    "underscore.string": "^3.3.4"
+    "debug": "^4.1.1",
+    "lodash": "^4.17.11",
+    "underscore.string": "^3.3.5"
   },
   "devDependencies": {
-    "ava": "^0.24.0",
+    "@commitlint/cli": "^7.5.2",
+    "@commitlint/config-conventional": "^7.5.0",
+    "ava": "^1.4.0",
     "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "codecov": "^3.0.0",
-    "cross-env": "^5.1.1",
-    "eslint": "^4.12.1",
-    "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-prettier": "^2.3.1",
-    "husky": "^0.14.3",
-    "koa": "^2.3.0",
+    "babel-preset-env": "^1.7.0",
+    "codecov": "^3.2.0",
+    "cross-env": "^5.2.0",
+    "eslint": "^5.15.3",
+    "eslint-config-xo-lass": "^1.0.3",
+    "fixpack": "^2.3.1",
+    "husky": "^1.3.1",
+    "koa": "^2.7.0",
     "koa-404-handler": "^0.0.2",
     "koa-basic-auth": "https://github.com/niftylettuce/basic-auth",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
-    "koa-generic-session": "^2.0.0",
-    "koa-redis": "^3.0.0",
-    "koa-router": "^7.2.1",
-    "lint-staged": "^5.0.0",
-    "nyc": "^11.3.0",
-    "prettier": "^1.8.2",
-    "redis": "^2.7.1",
-    "remark-cli": "^4.0.0",
-    "remark-preset-github": "^0.0.7",
-    "supertest": "^3.0.0",
-    "xo": "^0.18.2"
+    "koa-generic-session": "^2.0.1",
+    "koa-redis": "^3.1.3",
+    "koa-router": "^7.4.0",
+    "lint-staged": "^8.1.5",
+    "nyc": "^13.3.0",
+    "redis": "^2.8.0",
+    "remark-cli": "^6.0.1",
+    "remark-preset-github": "^0.0.13",
+    "supertest": "^4.0.2",
+    "xo": "^0.24.0"
   },
   "engines": {
-    "node": ">= 6.4.0"
+    "node": ">=7.6.0"
   },
   "homepage": "https://github.com/ladjs/koa-better-error-handler",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm test",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
   "keywords": [
+    "404",
+    "500",
     "async",
     "await",
     "better",
     "boom",
+    "context",
+    "ctx",
     "custom",
     "error",
     "error-handler",
+    "errors",
     "es7",
     "flash",
     "handler",
+    "handling",
     "koa",
     "messages",
     "override",
     "promises",
-    "stripe",
-    "404",
-    "500",
-    "ctx",
-    "context",
-    "errors",
-    "handling"
+    "stripe"
   ],
   "license": "MIT",
-  "main": "lib/index.js",
   "lint-staged": {
-    "*.{js,jsx,mjs,ts,tsx,css,less,scss,json,graphql}": [
-      "prettier --write --single-quote --trailing-comma none",
-      "git add"
-    ],
-    "*.md": ["remark . -qfo", "git add"]
+    "linters": {
+      "*.js": [
+        "xo --fix",
+        "git add"
+      ],
+      "*.md": [
+        "remark . -qfo",
+        "git add"
+      ],
+      "package.json": [
+        "fixpack",
+        "git add"
+      ]
+    }
+  },
+  "main": "lib/index.js",
+  "prettier": {
+    "singleQuote": true,
+    "bracketSpacing": true,
+    "trailingComma": "none"
   },
   "remarkConfig": {
-    "plugins": ["preset-github"]
+    "plugins": [
+      "preset-github"
+    ]
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
+    "build": "node_modules/.bin/babel src --out-dir lib",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "lint": "xo && remark . -qfo",
     "precommit": "lint-staged && npm test",
     "test": "npm run build && npm run lint && npm run test-coverage",
     "test-coverage": "cross-env NODE_ENV=test nyc ava",
-    "build": "node_modules/.bin/babel src --out-dir lib",
     "watch": "node_modules/.bin/babel src --watch --out-dir lib"
   },
   "xo": {
-    "extends": "prettier",
-    "plugins": ["prettier"],
-    "parserOptions": {
-      "sourceType": "script"
-    },
-    "rules": {
-      "prettier/prettier": [
-        "error",
-        {
-          "singleQuote": true,
-          "bracketSpacing": true,
-          "trailingComma": "none"
-        }
-      ],
-      "max-len": [
-        "error",
-        {
-          "code": 80,
-          "ignoreUrls": true
-        }
-      ],
-      "capitalized-comments": "off",
-      "camelcase": "off",
-      "no-warning-comments": "off"
-    },
-    "space": true
+    "prettier": true,
+    "space": true,
+    "extends": [
+      "xo-lass"
+    ]
   }
 }

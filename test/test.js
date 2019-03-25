@@ -25,6 +25,7 @@ test.beforeEach(t => {
   t.context.app = new Koa();
 
   // override koa's undocumented error handler
+  // eslint-disable-next-line unicorn/prefer-add-event-listener
   t.context.app.context.onerror = errorHandler;
 
   // set up some routes

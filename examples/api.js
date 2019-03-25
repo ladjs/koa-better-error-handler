@@ -2,12 +2,13 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const koa404Handler = require('koa-404-handler');
 
-const errorHandler = require('../');
+const errorHandler = require('..');
 
 // initialize our app
 const app = new Koa();
 
 // override koa's undocumented error handler
+// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // specify that this is our api

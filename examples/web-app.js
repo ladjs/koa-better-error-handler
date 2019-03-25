@@ -7,7 +7,7 @@ const convert = require('koa-convert');
 const Router = require('koa-router');
 const koa404Handler = require('koa-404-handler');
 
-const errorHandler = require('../');
+const errorHandler = require('..');
 
 // initialize our app
 const app = new Koa();
@@ -38,6 +38,7 @@ app.use(
 app.use(convert(flash()));
 
 // override koa's undocumented error handler
+// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // use koa-404-handler
