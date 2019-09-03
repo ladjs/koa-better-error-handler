@@ -191,7 +191,7 @@ try {
 {
   "statusCode": 400,
   "error": "Bad Request",
-  "message": "<ul class=\"text-xs-left mb-0\"><li>Path `company_logo` is required.</li><li>Gig description must be 100-300 characters.</li></ul>"
+  "message": "<ul class=\"text-left mb-0\"><li>Path `company_logo` is required.</li><li>Gig description must be 100-300 characters.</li></ul>"
 }
 ```
 

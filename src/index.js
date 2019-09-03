@@ -221,18 +221,24 @@ function parseValidationError(ctx, err) {
     return error;
   });
 
+  // translate messages
+  const translate = message =>
+    _.isFunction(ctx.request.t) ? ctx.request.t(message) : message;
+
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
   if (_.values(err.errors).length === 1) {
-    err.message = _.values(err.errors)[0].message;
+    err.message = translate(_.values(err.errors)[0].message);
   } else {
-    const errors = _.map(_.values(err.errors), 'message');
+    const errors = _.map(_.map(_.values(err.errors), 'message'), translate);
     err.message = ctx.api
       ? errors.join(', ')
-      : `<ul class="text-xs-left mb-0"><li>${errors.join(
-          '</li><li>'
-        )}</li></ul>`;
+      : `<ul class="text-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`;
   }
+
+  // this ensures the error shows up client-side
+  err.status = 400;
+  err.statusCode = 400;
 
   return err;
 }
