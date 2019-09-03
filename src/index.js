@@ -17,6 +17,18 @@ const _500 = fs.readFileSync(path.join(__dirname, '..', '500.html'), opts);
 
 const debug = new Debug('koa-better-error-handler');
 
+const passportLocalMongooseErrorNames = [
+  'AuthenticationError',
+  'MissingPasswordError',
+  'AttemptTooSoonError',
+  'TooManyAttemptsError',
+  'NoSaltValueStoredError',
+  'IncorrectPasswordError',
+  'IncorrectUsernameError',
+  'MissingUsernameError',
+  'UserExistsError'
+];
+
 // initialize try/catch error handling right away
 // adapted from: https://github.com/koajs/onerror/blob/master/index.js
 // https://github.com/koajs/examples/issues/20#issuecomment-31568401
@@ -202,6 +214,21 @@ async function errorHandler(err) {
 }
 
 function parseValidationError(ctx, err) {
+  // translate messages
+  const translate = message =>
+    _.isFunction(ctx.request.t) ? ctx.request.t(message) : message;
+
+  // passport-local-mongoose support
+  if (passportLocalMongooseErrorNames.includes(err.name)) {
+    err.message = translate(err.message);
+    // this ensures the error shows up client-side
+    err.status = 400;
+    // 429 = too many requests
+    if (['AttemptTooSoonError', 'TooManyAttemptsError'].includes(err.name))
+      err.status = 429;
+    return err;
+  }
+
   // inspired by https://github.com/syntagma/mongoose-error-helper
   if (err.name !== 'ValidationError') return err;
 
@@ -221,10 +248,6 @@ function parseValidationError(ctx, err) {
     return error;
   });
 
-  // translate messages
-  const translate = message =>
-    _.isFunction(ctx.request.t) ? ctx.request.t(message) : message;
-
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
   if (_.values(err.errors).length === 1) {
@@ -238,7 +261,6 @@ function parseValidationError(ctx, err) {
 
   // this ensures the error shows up client-side
   err.status = 400;
-  err.statusCode = 400;
 
   return err;
 }
