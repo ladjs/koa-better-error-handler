@@ -1,10 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-const s = require('underscore.string');
-const co = require('co');
+
+const Boom = require('@hapi/boom');
 const Debug = require('debug');
 const _ = require('lodash');
-const Boom = require('boom');
+const capitalize = require('capitalize');
+const camelCase = require('camelcase');
+const co = require('co');
+const humanize = require('humanize');
+const statuses = require('statuses');
+const toIdentifier = require('toidentifier');
 
 const opts = {
   encoding: 'utf8'
@@ -56,7 +61,8 @@ async function errorHandler(err) {
 
   // check if we threw just a status code in order to keep it simple
   const val = parseInt(err.message, 10);
-  if (_.isNumber(val) && val >= 400) err = Boom.create(val);
+  if (_.isNumber(val) && val >= 400)
+    err = Boom[camelCase(toIdentifier(statuses[val]))]();
 
   // check if we have a boom error that specified
   // a status code already for us (and then use it)
@@ -100,7 +106,7 @@ async function errorHandler(err) {
   err.statusCode = err.status;
   this.statusCode = err.statusCode;
   this.status = this.statusCode;
-  this.body = Boom.create(err.status, err.message).output.payload;
+  this.body = new Boom(err.message, { statusCode: err.status }).output.payload;
 
   // set any additional error headers specified
   // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
@@ -236,15 +242,15 @@ function parseValidationError(ctx, err) {
   // https://github.com/niftylettuce/mongoose-validation-error-transform
   err.errors = _.map(err.errors, error => {
     if (!_.isString(error.path)) {
-      error.message = s.capitalize(error.message);
+      error.message = capitalize(error.message);
       return error;
     }
 
     error.message = error.message.replace(
       new RegExp(error.path, 'g'),
-      s.humanize(error.path)
+      humanize(error.path)
     );
-    error.message = s.capitalize(error.message);
+    error.message = capitalize(error.message);
     return error;
   });
 
