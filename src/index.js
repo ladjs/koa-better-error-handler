@@ -7,7 +7,7 @@ const _ = require('lodash');
 const capitalize = require('capitalize');
 const camelCase = require('camelcase');
 const co = require('co');
-const humanize = require('humanize');
+const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 
