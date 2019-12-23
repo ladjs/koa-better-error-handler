@@ -75,15 +75,6 @@ async function errorHandler(err) {
   const hasFlash = _.isFunction(this.flash);
   debug('hasFlash', hasFlash);
 
-  // check if there is session support
-  const hasSessions =
-    _.isObject(this.session) &&
-    _.isObject(this.sessionStore) &&
-    _.isString(this.sessionId) &&
-    _.isObject(this.session) &&
-    _.isFunction(this.sessionStore.set);
-  debug('hasSessions', hasSessions);
-
   // check if there is a view rendering engine binding `this.render`
   const hasRender = _.isFunction(this.render);
   debug('hasRender', hasRender);
