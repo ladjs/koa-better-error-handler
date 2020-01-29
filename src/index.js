@@ -213,7 +213,9 @@ async function errorHandler(err) {
 function parseValidationError(ctx, err) {
   // translate messages
   const translate = message =>
-    _.isFunction(ctx.request.t) ? ctx.request.t(message) : message;
+    !err.no_translate && _.isFunction(ctx.request.t)
+      ? ctx.request.t(message)
+      : message;
 
   // passport-local-mongoose support
   if (passportLocalMongooseErrorNames.includes(err.name)) {
