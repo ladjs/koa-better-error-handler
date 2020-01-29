@@ -97,7 +97,9 @@ async function errorHandler(err) {
   err.statusCode = err.status;
   this.statusCode = err.statusCode;
   this.status = this.statusCode;
-  this.body = new Boom(err.message, { statusCode: err.status }).output.payload;
+  this.body = new Boom.Boom(err.message, {
+    statusCode: err.status
+  }).output.payload;
 
   // set any additional error headers specified
   // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
@@ -128,8 +130,8 @@ async function errorHandler(err) {
           try {
             debug('rendering 404 page');
             await this.render('404');
-          } catch (err2) {
-            debug('could not find 404 page, using built-in 404 html');
+          } catch (err_) {
+            debug('could not find 404 page, using built-in 404 html', err_);
             this.body = _404;
           }
         } else {
@@ -149,8 +151,8 @@ async function errorHandler(err) {
           try {
             debug('rendering 500 page');
             await this.render('500');
-          } catch (err2) {
-            debug('could not find 500 page, using built-in 500 html');
+          } catch (err_) {
+            debug('could not find 500 page, using built-in 500 html', err_);
             this.body = _500;
           }
         } else {

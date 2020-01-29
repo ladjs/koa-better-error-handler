@@ -38,7 +38,6 @@ app.use(
 app.use(convert(flash()));
 
 // override koa's undocumented error handler
-// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // use koa-404-handler

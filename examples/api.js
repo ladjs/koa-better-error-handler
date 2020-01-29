@@ -8,7 +8,6 @@ const errorHandler = require('..');
 const app = new Koa();
 
 // override koa's undocumented error handler
-// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // specify that this is our api

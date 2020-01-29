@@ -1,13 +1,13 @@
 const http = require('http');
 const test = require('ava');
-const Router = require('koa-router');
+const Router = require('@koa/router');
 const request = require('supertest');
 const Koa = require('koa');
 const _ = require('lodash');
 const koa404Handler = require('koa-404-handler');
 const auth = require('koa-basic-auth');
 
-const errorHandler = require('../lib');
+const errorHandler = require('..');
 
 const statusCodes = _.keys(http.STATUS_CODES)
   .map(code => {
@@ -25,7 +25,6 @@ test.beforeEach(t => {
   t.context.app = new Koa();
 
   // override koa's undocumented error handler
-  // eslint-disable-next-line unicorn/prefer-add-event-listener
   t.context.app.context.onerror = errorHandler;
 
   // set up some routes

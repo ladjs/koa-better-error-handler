@@ -60,7 +60,6 @@ const koa404Handler = require('koa-404-handler');
 const app = new Koa();
 
 // override koa's undocumented error handler
-// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // specify that this is our api
@@ -128,7 +127,6 @@ app.use(
 app.use(convert(flash()));
 
 // override koa's undocumented error handler
-// eslint-disable-next-line unicorn/prefer-add-event-listener
 app.context.onerror = errorHandler;
 
 // use koa-404-handler
@@ -165,6 +163,19 @@ curl -H "Accept: application/json" http://localhost/some-page-does-not-exist
   "statusCode": 404,
   "error": "Not Found",
   "message":"Not Found"
+}
+```
+
+
+## Prevent Errors From Being Automatically Translated
+
+As of v3.0.5, you can prevent an error from being automatically translated by setting the error property of `no_translate` to have a value of `true`:
+
+```js
+function middleware(ctx) {
+  const err = Boom.badRequest('Uh oh!');
+  err.no_translate = true; // <----
+  ctx.throw(err);
 }
 ```
 
