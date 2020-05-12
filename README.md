@@ -229,7 +229,7 @@ You can also specify a base URI in the environment variable for rendering as `pr
 [MIT](LICENSE) © Nick Baugh
 
 
-##
+## 
 
 [boom]: https://github.com/hapijs/boom
 
