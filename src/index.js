@@ -4,9 +4,10 @@ const path = require('path');
 const Boom = require('@hapi/boom');
 const Debug = require('debug');
 const _ = require('lodash');
-const capitalize = require('capitalize');
 const camelCase = require('camelcase');
+const capitalize = require('capitalize');
 const co = require('co');
+const htmlToText = require('html-to-text');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
@@ -97,7 +98,10 @@ async function errorHandler(err) {
   err.statusCode = err.status;
   this.statusCode = err.statusCode;
   this.status = this.statusCode;
-  this.body = new Boom.Boom(err.message, {
+
+  const friendlyAPIMessage = makeAPIFriendly(this, err.message);
+
+  this.body = new Boom.Boom(friendlyAPIMessage, {
     statusCode: err.status
   }).output.payload;
 
@@ -212,6 +216,19 @@ async function errorHandler(err) {
   this.res.end(this.body);
 }
 
+function makeAPIFriendly(ctx, message) {
+  if (!ctx.api) return message;
+  message = htmlToText.fromString(message, {
+    wordwrap: false,
+    linkHrefBaseUrl: process.env.ERROR_HANDLER_BASE_URL
+      ? process.env.ERROR_HANDLER_BASE_URL
+      : '',
+    hideLinkHrefIfSameAsText: true,
+    ignoreImage: true
+  });
+  return message;
+}
+
 function parseValidationError(ctx, err) {
   // translate messages
   const translate = message =>
@@ -255,9 +272,10 @@ function parseValidationError(ctx, err) {
     err.message = translate(_.values(err.errors)[0].message);
   } else {
     const errors = _.map(_.map(_.values(err.errors), 'message'), translate);
-    err.message = ctx.api
-      ? errors.join(', ')
-      : `<ul class="text-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`;
+    err.message = makeAPIFriendly(
+      ctx,
+      `<ul class="text-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`
+    );
   }
 
   // this ensures the error shows up client-side
