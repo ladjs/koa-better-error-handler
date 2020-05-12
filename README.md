@@ -221,7 +221,7 @@ try {
 
 By default if `ctx.api` is true, then [html-to-text](https://github.com/werk85/node-html-to-text) will be invoked upon the `err.message`, thus converting all the HTML markup into text format.
 
-You can also specify a base URI in the environment variable for rendering as `process.env.ERROR_HANDLER_BASE_URL`, e.g. `BERROR_HANDLER_BASE_URL=https://example.com` (omit trailing slash), and any HTML links such as `<a href="/foo/bar/baz">Click here</a>` will be converted to `[Click here][1]` with a `[1]` link appended of `https://example.com/foo/bar/baz`.
+You can also specify a base URI in the environment variable for rendering as `process.env.ERROR_HANDLER_BASE_URL`, e.g. `ERROR_HANDLER_BASE_URL=https://example.com` (omit trailing slash), and any HTML links such as `<a href="/foo/bar/baz">Click here</a>` will be converted to `[Click here][1]` with a `[1]` link appended of `https://example.com/foo/bar/baz`.
 
 
 ## License
@@ -229,7 +229,7 @@ You can also specify a base URI in the environment variable for rendering as `pr
 [MIT](LICENSE) © Nick Baugh
 
 
-## 
+##
 
 [boom]: https://github.com/hapijs/boom
 
