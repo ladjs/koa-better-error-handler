@@ -115,11 +115,13 @@ async function errorHandler(err) {
   this.app.emit('error', err, this);
 
   // fix page title and description
-  this.state.meta = this.state.meta || {};
-  this.state.meta.title = this.body.error;
-  this.state.meta.description = err.message;
-  debug('set `this.state.meta.title` to %s', this.state.meta.title);
-  debug('set `this.state.meta.desc` to %s', this.state.meta.description);
+  if (!this.api) {
+    this.state.meta = this.state.meta || {};
+    this.state.meta.title = this.body.error;
+    this.state.meta.description = err.message;
+    debug('set `this.state.meta.title` to %s', this.state.meta.title);
+    debug('set `this.state.meta.desc` to %s', this.state.meta.description);
+  }
 
   debug('type was %s', type);
 
