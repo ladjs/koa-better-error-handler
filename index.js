@@ -18,8 +18,8 @@ const opts = {
 
 // error pages were inspired by HTML5 Boilerplate's default 404.html page
 // https://github.com/h5bp/html5-boilerplate/blob/master/src/404.html
-const _404 = fs.readFileSync(path.join(__dirname, '..', '404.html'), opts);
-const _500 = fs.readFileSync(path.join(__dirname, '..', '500.html'), opts);
+const _404 = fs.readFileSync(path.join(__dirname, '404.html'), opts);
+const _500 = fs.readFileSync(path.join(__dirname, '500.html'), opts);
 
 const debug = new Debug('koa-better-error-handler');
 
