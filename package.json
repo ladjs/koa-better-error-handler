@@ -25,18 +25,13 @@
     "toidentifier": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.1",
-    "@babel/core": "^7.10.2",
-    "@babel/preset-env": "^7.10.2",
     "@commitlint/cli": "^8.3.5",
     "@commitlint/config-conventional": "^8.3.4",
     "@koa/router": "^9.0.1",
     "ava": "^3.8.2",
     "codecov": "^3.7.0",
     "cross-env": "^7.0.2",
-    "eslint": "6.x",
     "eslint-config-xo-lass": "^1.0.3",
-    "eslint-plugin-node": "^11.1.0",
     "fixpack": "^3.0.6",
     "husky": "^4.2.5",
     "koa": "^2.12.0",
@@ -55,7 +50,7 @@
     "xo": "0.25"
   },
   "engines": {
-    "node": ">=7.6.0"
+    "node": ">= 10"
   },
   "homepage": "https://github.com/ladjs/koa-better-error-handler",
   "husky": {
@@ -102,7 +97,7 @@
       "git add"
     ]
   },
-  "main": "lib/index.js",
+  "main": "index.js",
   "prettier": {
     "singleQuote": true,
     "bracketSpacing": true,
@@ -115,13 +110,12 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "build": "node_modules/.bin/babel src --out-dir lib",
+    "l": "ava",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "lint": "xo && remark . -qfo && eslint --no-inline-config -c .lib.eslintrc lib",
+    "lint": "xo && remark . -qfo",
     "precommit": "lint-staged && npm test",
-    "test": "npm run build && npm run lint && npm run test-coverage",
-    "test-coverage": "cross-env NODE_ENV=test nyc ava",
-    "watch": "node_modules/.bin/babel src --watch --out-dir lib"
+    "test": "npm run lint && npm run test-coverage",
+    "test-coverage": "cross-env NODE_ENV=test nyc ava"
   },
   "xo": {
     "prettier": true,
