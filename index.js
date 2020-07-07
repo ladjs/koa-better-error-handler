@@ -3,7 +3,6 @@ const path = require('path');
 
 const Boom = require('@hapi/boom');
 const Debug = require('debug');
-const _ = require('lodash');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
 const co = require('co');
@@ -11,6 +10,15 @@ const htmlToText = require('html-to-text');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
+
+// lodash 
+const _isNumber = require('lodash.isnumber');
+const _isString = require('lodash.isstring');
+const _isObject = require('lodash.isobject');
+const _isFunction = require('lodash.isfunction');
+const _isError = require('lodash.iserror');
+const _map = require('lodash.map');
+const _values = require('lodash.values');
 
 const opts = {
   encoding: 'utf8'
@@ -47,7 +55,7 @@ const passportLocalMongooseErrorNames = [
 async function errorHandler(err) {
   if (!err) return;
 
-  if (!_.isError(err)) err = new Error(err);
+  if (!_isError(err)) err = new Error(err);
 
   const type = this.accepts(['text', 'json', 'html']);
 
@@ -62,22 +70,22 @@ async function errorHandler(err) {
 
   // check if we threw just a status code in order to keep it simple
   const val = parseInt(err.message, 10);
-  if (_.isNumber(val) && val >= 400)
-    err = Boom[camelCase(toIdentifier(statuses[val]))]();
+  if (_isNumber(val) && val >= 400)
+    err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
 
   // check if we have a boom error that specified
   // a status code already for us (and then use it)
-  if (_.isObject(err.output) && _.isNumber(err.output.statusCode))
+  if (_isObject(err.output) && _isNumber(err.output.statusCode))
     err.status = err.output.statusCode;
 
-  if (!_.isNumber(err.status)) err.status = 500;
+  if (!_isNumber(err.status)) err.status = 500;
 
   // check if there is flash messaging
-  const hasFlash = _.isFunction(this.flash);
+  const hasFlash = _isFunction(this.flash);
   debug('hasFlash', hasFlash);
 
   // check if there is a view rendering engine binding `this.render`
-  const hasRender = _.isFunction(this.render);
+  const hasRender = _isFunction(this.render);
   debug('hasRender', hasRender);
 
   // check if we're about to go into a possible endless redirect loop
@@ -107,7 +115,7 @@ async function errorHandler(err) {
 
   // set any additional error headers specified
   // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
-  if (_.isObject(err.headers) && Object.keys(err.headers).length > 0)
+  if (_isObject(err.headers) && Object.keys(err.headers).length > 0)
     this.set(err.headers);
 
   debug('status code was %d', this.status);
@@ -219,27 +227,27 @@ async function errorHandler(err) {
 }
 
 function makeAPIFriendly(ctx, message) {
-  if (!ctx.api) return message;
-  message = htmlToText.fromString(message, {
-    wordwrap: false,
-    linkHrefBaseUrl: process.env.ERROR_HANDLER_BASE_URL
-      ? process.env.ERROR_HANDLER_BASE_URL
-      : '',
-    hideLinkHrefIfSameAsText: true,
-    ignoreImage: true
-  });
-  return message;
+  return !ctx.api
+    ? message
+    : htmlToText.fromString(message, {
+        wordwrap: false,
+        linkHrefBaseUrl: process.env.ERROR_HANDLER_BASE_URL
+          ? process.env.ERROR_HANDLER_BASE_URL
+          : '',
+        hideLinkHrefIfSameAsText: true,
+        ignoreImage: true
+      });
 }
 
 function parseValidationError(ctx, err) {
   // translate messages
-  const translate = message =>
-    !err.no_translate && _.isFunction(ctx.request.t)
+  const translate = (message) =>
+    !err.no_translate && _isFunction(ctx.request.t)
       ? ctx.request.t(message)
       : message;
 
   // passport-local-mongoose support
-  if (passportLocalMongooseErrorNames.includes(err.name)) {
+  if (passportLocalMongooseErrorNames.has(err.name)) {
     err.message = translate(err.message);
     // this ensures the error shows up client-side
     err.status = 400;
@@ -254,8 +262,8 @@ function parseValidationError(ctx, err) {
 
   // transform the error messages to be humanized as adapted from:
   // https://github.com/niftylettuce/mongoose-validation-error-transform
-  err.errors = _.map(err.errors, error => {
-    if (!_.isString(error.path)) {
+  err.errors = _map(err.errors, (error) => {
+    if (!_isString(error.path)) {
       error.message = capitalize(error.message);
       return error;
     }
@@ -270,10 +278,10 @@ function parseValidationError(ctx, err) {
 
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
-  if (_.values(err.errors).length === 1) {
-    err.message = translate(_.values(err.errors)[0].message);
+  if (_values(err.errors).length === 1) {
+    err.message = translate(_values(err.errors)[0].message);
   } else {
-    const errors = _.map(_.map(_.values(err.errors), 'message'), translate);
+    const errors = _map(_map(_values(err.errors), 'message'), translate);
     err.message = makeAPIFriendly(
       ctx,
       `<ul class="text-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`

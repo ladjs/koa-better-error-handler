@@ -20,34 +20,41 @@
     "debug": "^4.1.1",
     "html-to-text": "^5.1.1",
     "humanize-string": "^2.1.0",
-    "lodash": "^4.17.15",
+    "lodash.iserror": "^3.1.1",
+    "lodash.isfunction": "^3.0.9",
+    "lodash.isnumber": "^3.0.3",
+    "lodash.isobject": "^3.0.2",
+    "lodash.isstring": "^4.0.1",
+    "lodash.map": "^4.6.0",
+    "lodash.values": "^4.3.0",
     "statuses": "^2.0.0",
     "toidentifier": "^1.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^8.3.5",
-    "@commitlint/config-conventional": "^8.3.4",
-    "@koa/router": "^9.0.1",
-    "ava": "^3.8.2",
+    "@commitlint/cli": "^9.0.1",
+    "@commitlint/config-conventional": "^9.0.1",
+    "@koa/router": "^9.3.1",
+    "ava": "^3.10.0",
     "codecov": "^3.7.0",
     "cross-env": "^7.0.2",
     "eslint-config-xo-lass": "^1.0.3",
     "fixpack": "^3.0.6",
     "husky": "^4.2.5",
-    "koa": "^2.12.0",
+    "koa": "^2.13.0",
     "koa-404-handler": "^0.0.2",
     "koa-basic-auth": "^4.0.0",
     "koa-connect-flash": "^0.1.2",
     "koa-convert": "^1.2.0",
     "koa-generic-session": "^2.0.4",
     "koa-redis": "^4.0.1",
-    "lint-staged": "^10.2.7",
-    "nyc": "^15.0.1",
+    "lint-staged": "^10.2.11",
+    "lodash": "^4.17.15",
+    "nyc": "^15.1.0",
     "redis": "^3.0.2",
     "remark-cli": "^8.0.0",
     "remark-preset-github": "^1.0.1",
     "supertest": "^4.0.2",
-    "xo": "0.25"
+    "xo": "^0.32.1"
   },
   "engines": {
     "node": ">= 10"
@@ -110,7 +117,6 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "l": "ava",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "lint": "xo && remark . -qfo",
     "precommit": "lint-staged && npm test",
@@ -122,6 +128,15 @@
     "space": true,
     "extends": [
       "xo-lass"
-    ]
+    ],
+    "ignore": [
+      "examples",
+      "test"
+    ],
+    "rules": {
+      "no-negated-condition": "off",
+      "unicorn/prevent-abbreviations": "off",
+      "unicorn/prefer-number-properties": "off"
+    }
   }
 }
