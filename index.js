@@ -11,7 +11,7 @@ const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 
-// lodash 
+// lodash
 const _isNumber = require('lodash.isnumber');
 const _isString = require('lodash.isstring');
 const _isObject = require('lodash.isobject');
