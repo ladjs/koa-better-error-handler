@@ -1,5 +1,8 @@
 language: node_js
 node_js:
-  - 12
+  - 10.20
+  - 12.18
+  - 13.14
+  - 14.4
 after_success:
   - npm run coverage
