@@ -247,7 +247,7 @@ function parseValidationError(ctx, err) {
       : message;
 
   // passport-local-mongoose support
-  if (passportLocalMongooseErrorNames.has(err.name)) {
+  if (passportLocalMongooseErrorNames.includes(err.name)) {
     err.message = translate(err.message);
     // this ensures the error shows up client-side
     err.status = 400;

@@ -226,7 +226,7 @@ You can also specify a base URI in the environment variable for rendering as `pr
 
 ## License
 
-[MIT](LICENSE) © Nick Baugh
+[MIT](LICENSE) © [Nick Baugh](http://niftylettuce.com/)
 
 
 ## 
