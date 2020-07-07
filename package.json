@@ -1,7 +1,7 @@
 {
   "name": "koa-better-error-handler",
   "description": "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
-  "version": "4.0.3",
+  "version": "5.0.0",
   "author": {
     "name": "Nick Baugh",
     "email": "niftylettuce@gmail.com",
@@ -140,15 +140,15 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "lint": "npm run lint:js",
     "lint:js": "xo",
     "lint:md": "remark . -qfo",
-    "lint": "npm run lint:js",
     "precommit": "lint-staged && npm tes-ci",
-    "test": "ava",
-    "test-cov": "cross-env NODE_ENV=test nyc npm run test",
     "pretest-ci": "npm run lint",
+    "test": "ava",
     "test-ci": "npm run test-cov",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "test-cov": "cross-env NODE_ENV=test nyc npm run test"
   },
   "xo": {
     "prettier": true,
