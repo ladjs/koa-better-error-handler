@@ -76,6 +76,7 @@
     "redis": "^3.0.2",
     "remark-cli": "^8.0.0",
     "remark-preset-github": "^1.0.1",
+    "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
     "xo": "^0.32.1"
   },
