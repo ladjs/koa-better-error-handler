@@ -2,7 +2,11 @@
   "name": "koa-better-error-handler",
   "description": "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
   "version": "4.0.3",
-  "author": "Nick Baugh <niftylettuce@gmail.com>",
+  "author": {
+    "name": "Nick Baugh",
+    "email": "niftylettuce@gmail.com",
+    "url": "http://niftylettuce.com/"
+  },
   "bugs": "https://github.com/ladjs/koa-better-error-handler/issues",
   "commitlint": {
     "extends": [
@@ -10,7 +14,26 @@
     ]
   },
   "contributors": [
-    "Nick Baugh <niftylettuce@gmail.com>"
+    {
+      "name": "Nick Baugh",
+      "email": "niftylettuce@gmail.com",
+      "url": "http://niftylettuce.com/"
+    },
+    {
+      "name": "Shaun Warman",
+      "email": "shaunwarman1@gmail.com",
+      "url": "https://shaunwarman.com/"
+    },
+    {
+      "name": "Pablo P Varela",
+      "email": "yo@pablo.pink",
+      "url": "https://pablo.pink/"
+    },
+    {
+      "name": "Imed Jaberi",
+      "email": "imed-jaberi@outlook.com",
+      "url": "https://www.3imed-jaberi.com/"
+    }
   ],
   "dependencies": {
     "@hapi/boom": "^9.1.0",
@@ -57,7 +80,7 @@
     "xo": "^0.32.1"
   },
   "engines": {
-    "node": ">= 10"
+    "node": ">= 12"
   },
   "homepage": "https://github.com/ladjs/koa-better-error-handler",
   "husky": {
@@ -117,11 +140,15 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "lint": "xo && remark . -qfo",
-    "precommit": "lint-staged && npm test",
-    "test": "npm run lint && npm run test-coverage",
-    "test-coverage": "cross-env NODE_ENV=test nyc ava"
+    "lint:js": "xo",
+    "lint:md": "remark . -qfo",
+    "lint": "npm run lint:js",
+    "precommit": "lint-staged && npm tes-ci",
+    "test": "ava",
+    "test-cov": "cross-env NODE_ENV=test nyc npm run test",
+    "pretest-ci": "npm run lint",
+    "test-ci": "npm run test-cov",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "xo": {
     "prettier": true,
