@@ -57,7 +57,7 @@
     "@commitlint/cli": "^9.0.1",
     "@commitlint/config-conventional": "^9.0.1",
     "@koa/router": "^9.3.1",
-    "ava": "^3.10.0",
+    "ava": "3.8.2",
     "codecov": "^3.7.0",
     "cross-env": "^7.0.2",
     "eslint-config-xo-lass": "^1.0.3",
@@ -163,7 +163,8 @@
     "rules": {
       "no-negated-condition": "off",
       "unicorn/prevent-abbreviations": "off",
-      "unicorn/prefer-number-properties": "off"
+      "unicorn/prefer-number-properties": "off",
+      "unicorn/prefer-set-has": "off"
     }
   }
 }
