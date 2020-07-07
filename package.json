@@ -149,6 +149,7 @@
     "pretest-ci": "npm run lint",
     "test": "ava",
     "test-ci": "npm run test-cov",
+    "pretest-cov": "rimraf .nyc_output",
     "test-cov": "cross-env NODE_ENV=test nyc npm run test"
   },
   "xo": {
