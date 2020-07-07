@@ -80,7 +80,7 @@
     "xo": "^0.32.1"
   },
   "engines": {
-    "node": ">= 12"
+    "node": ">= 10.14"
   },
   "homepage": "https://github.com/ladjs/koa-better-error-handler",
   "husky": {
