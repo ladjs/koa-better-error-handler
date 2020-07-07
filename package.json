@@ -141,16 +141,17 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "precommit": "lint-staged && npm tes-ci",
     "lint": "npm run lint:js",
     "lint:js": "xo",
     "lint:md": "remark . -qfo",
-    "precommit": "lint-staged && npm tes-ci",
-    "pretest-ci": "npm run lint",
     "test": "ava",
-    "test-ci": "npm run test-cov",
     "pretest-cov": "rimraf .nyc_output",
-    "test-cov": "cross-env NODE_ENV=test nyc npm run test"
+    "test-cov": "cross-env NODE_ENV=test nyc npm run test",
+    "pretest-ci": "npm run lint",
+    "test-ci": "npm run test-cov",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
+    "postcoverage": "codecov"
   },
   "xo": {
     "prettier": true,
