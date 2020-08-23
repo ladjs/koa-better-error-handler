@@ -1,7 +1,7 @@
 {
   "name": "koa-better-error-handler",
   "description": "A better error-handler for Lad and Koa.  Makes `ctx.throw` awesome (best used with koa-404-handler)",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "author": {
     "name": "Nick Baugh",
     "email": "niftylettuce@gmail.com",
