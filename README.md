@@ -142,7 +142,7 @@ app.use(
 app.use(convert(flash()));
 
 // override koa's undocumented error handler
-app.context.onerror = errorHandler({ cookiesKey });
+app.context.onerror = errorHandler(cookiesKey);
 
 // use koa-404-handler
 app.use(koa404Handler);
