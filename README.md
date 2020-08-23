@@ -46,6 +46,19 @@ npm install --save koa-better-error-handler
 
 > You should probably be using this in combination with [koa-404-handler][] too!
 
+The package exports a function which accepts four arguments (in order):
+
+* `cookiesKey` - defaults to `false`
+* `logger` - defaults to `console`
+* `useCtxLogger` - defaults to `true`
+* `stringify` - defaults to `fast-safe-stringify` (you can also use `JSON.stringify` or another option here if preferred)
+
+If you pass a `cookiesKey` then support for sessions will be added. You should always set this argument's value if you are using cookies and sessions (e.g. web server).
+
+We recommend to use [Cabin][] for your `logger` and also you should use its middleware too, as it will auto-populate `ctx.logger` for you to make context-based logs easy.
+
+Note that this package only supports `koa-generic-session`, and does not yet support `koa-session-store` (see the code in [index.js](index.js) for more insight, pull requests are welcome).
+
 ### API
 
 > No support for sessions, cookies, or flash messaging:
@@ -60,7 +73,7 @@ const koa404Handler = require('koa-404-handler');
 const app = new Koa();
 
 // override koa's undocumented error handler
-app.context.onerror = errorHandler;
+app.context.onerror = errorHandler();
 
 // specify that this is our api
 app.context.api = true;
@@ -115,9 +128,11 @@ const redisStore = new RedisStore({
 });
 
 // add sessions to our app
+const cookiesKey = 'lad.sid';
 app.use(
   convert(
     session({
+      key: cookiesKey,
       store: redisStore
     })
   )
@@ -127,7 +142,7 @@ app.use(
 app.use(convert(flash()));
 
 // override koa's undocumented error handler
-app.context.onerror = errorHandler;
+app.context.onerror = errorHandler({ cookiesKey });
 
 // use koa-404-handler
 app.use(koa404Handler);
@@ -244,3 +259,5 @@ You can also specify a base URI in the environment variable for rendering as `pr
 [koa]: http://koajs.com/
 
 [koa-404-handler]: https://github.com/ladjs/koa-404-handler
+
+[cabin]: https://cabinjs.com

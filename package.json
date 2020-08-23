@@ -40,7 +40,7 @@
     "camelcase": "^6.0.0",
     "capitalize": "^2.0.3",
     "co": "^4.6.0",
-    "debug": "^4.1.1",
+    "fast-safe-stringify": "^2.0.7",
     "html-to-text": "^5.1.1",
     "humanize-string": "^2.1.0",
     "lodash.iserror": "^3.1.1",
@@ -54,11 +54,11 @@
     "toidentifier": "^1.0.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^9.0.1",
-    "@commitlint/config-conventional": "^9.0.1",
-    "@koa/router": "^9.3.1",
-    "ava": "3.8.2",
-    "codecov": "^3.7.0",
+    "@commitlint/cli": "^9.1.2",
+    "@commitlint/config-conventional": "^9.1.2",
+    "@koa/router": "^9.4.0",
+    "ava": "3.11.1",
+    "codecov": "^3.7.2",
     "cross-env": "^7.0.2",
     "eslint-config-xo-lass": "^1.0.3",
     "fixpack": "^3.0.6",
@@ -71,14 +71,14 @@
     "koa-generic-session": "^2.0.4",
     "koa-redis": "^4.0.1",
     "lint-staged": "^10.2.11",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.20",
     "nyc": "^15.1.0",
     "redis": "^3.0.2",
-    "remark-cli": "^8.0.0",
-    "remark-preset-github": "^1.0.1",
+    "remark-cli": "^8.0.1",
+    "remark-preset-github": "^3.0.0",
     "rimraf": "^3.0.2",
     "supertest": "^4.0.2",
-    "xo": "^0.32.1"
+    "xo": "^0.33.0"
   },
   "engines": {
     "node": ">= 10.14"
@@ -141,17 +141,17 @@
   },
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "precommit": "lint-staged && npm tes-ci",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
     "lint": "npm run lint:js",
     "lint:js": "xo",
     "lint:md": "remark . -qfo",
-    "test": "ava",
-    "pretest-cov": "rimraf .nyc_output",
-    "test-cov": "cross-env NODE_ENV=test nyc npm run test",
+    "postcoverage": "codecov",
+    "precommit": "lint-staged && npm tes-ci",
     "pretest-ci": "npm run lint",
+    "pretest-cov": "rimraf .nyc_output",
+    "test": "ava",
     "test-ci": "npm run test-cov",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov",
-    "postcoverage": "codecov"
+    "test-cov": "cross-env NODE_ENV=test nyc npm run test"
   },
   "xo": {
     "prettier": true,

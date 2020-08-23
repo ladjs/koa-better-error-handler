@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const fastSafeStringify = require('fast-safe-stringify');
 const Boom = require('@hapi/boom');
-const Debug = require('debug');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
 const co = require('co');
@@ -29,8 +29,6 @@ const opts = {
 const _404 = fs.readFileSync(path.join(__dirname, '404.html'), opts);
 const _500 = fs.readFileSync(path.join(__dirname, '500.html'), opts);
 
-const debug = new Debug('koa-better-error-handler');
-
 const passportLocalMongooseErrorNames = [
   'AuthenticationError',
   'MissingPasswordError',
@@ -51,179 +49,184 @@ const passportLocalMongooseErrorNames = [
 // https://goo.gl/62oU7P
 // https://goo.gl/8Z7aMe
 
-// eslint-disable-next-line complexity
-async function errorHandler(err) {
-  if (!err) return;
+function errorHandler(
+  cookiesKey = false,
+  _logger = console,
+  useCtxLogger = true, // useful if you have ctx.logger (e.g. you're using Cabin's middleware)
+  stringify = fastSafeStringify // you could alternatively use JSON.stringify
+) {
+  // eslint-disable-next-line complexity
+  return async function (err) {
+    if (!err) return;
 
-  if (!_isError(err)) err = new Error(err);
+    const logger = useCtxLogger && this.logger ? this.logger : _logger;
 
-  const type = this.accepts(['text', 'json', 'html']);
+    if (!_isError(err)) err = new Error(err);
 
-  if (!type) {
-    debug('invalid type, sending 406 error');
-    err.status = 406;
-    err.message = Boom.notAcceptable().output.payload;
-  }
+    const type = this.accepts(['text', 'json', 'html']);
 
-  // parse mongoose validation errors
-  err = parseValidationError(this, err);
+    if (!type) {
+      logger.warn('invalid type, sending 406 error');
+      err.status = 406;
+      err.message = Boom.notAcceptable().output.payload;
+    }
 
-  // check if we threw just a status code in order to keep it simple
-  const val = parseInt(err.message, 10);
-  if (_isNumber(val) && val >= 400)
-    err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
+    // parse mongoose validation errors
+    err = parseValidationError(this, err);
 
-  // check if we have a boom error that specified
-  // a status code already for us (and then use it)
-  if (_isObject(err.output) && _isNumber(err.output.statusCode))
-    err.status = err.output.statusCode;
+    // check if we threw just a status code in order to keep it simple
+    const val = parseInt(err.message, 10);
+    if (_isNumber(val) && val >= 400)
+      err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
 
-  if (!_isNumber(err.status)) err.status = 500;
+    // check if we have a boom error that specified
+    // a status code already for us (and then use it)
+    if (_isObject(err.output) && _isNumber(err.output.statusCode))
+      err.status = err.output.statusCode;
 
-  // check if there is flash messaging
-  const hasFlash = _isFunction(this.flash);
-  debug('hasFlash', hasFlash);
+    if (!_isNumber(err.status)) err.status = 500;
 
-  // check if there is a view rendering engine binding `this.render`
-  const hasRender = _isFunction(this.render);
-  debug('hasRender', hasRender);
+    // check if there is flash messaging
+    const hasFlash = _isFunction(this.flash);
 
-  // check if we're about to go into a possible endless redirect loop
-  const noReferrer = this.get('Referrer') === '';
+    // check if there is a view rendering engine binding `this.render`
+    const hasRender = _isFunction(this.render);
 
-  // nothing we can do here other
-  // than delegate to the app-level
-  // handler and log.
-  if (this.headerSent || !this.writable) {
-    debug('headers were already sent, returning early');
-    err.headerSent = true;
-    return;
-  }
+    // check if we're about to go into a possible endless redirect loop
+    const noReferrer = this.get('Referrer') === '';
 
-  // populate the status and body with `boom` error message payload
-  // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
-  err.status = err.status || 500;
-  err.statusCode = err.status;
-  this.statusCode = err.statusCode;
-  this.status = this.statusCode;
+    // nothing we can do here other
+    // than delegate to the app-level
+    // handler and log.
+    if (this.headerSent || !this.writable) {
+      logger.error(new Error('Headers were already sent, returning early'));
+      err.headerSent = true;
+      return;
+    }
 
-  const friendlyAPIMessage = makeAPIFriendly(this, err.message);
+    // populate the status and body with `boom` error message payload
+    // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
+    err.status = err.status || 500;
+    err.statusCode = err.status;
+    this.statusCode = err.statusCode;
+    this.status = this.statusCode;
 
-  this.body = new Boom.Boom(friendlyAPIMessage, {
-    statusCode: err.status
-  }).output.payload;
+    const friendlyAPIMessage = makeAPIFriendly(this, err.message);
 
-  // set any additional error headers specified
-  // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
-  if (_isObject(err.headers) && Object.keys(err.headers).length > 0)
-    this.set(err.headers);
+    this.body = new Boom.Boom(friendlyAPIMessage, {
+      statusCode: err.status
+    }).output.payload;
 
-  debug('status code was %d', this.status);
+    // set any additional error headers specified
+    // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
+    if (_isObject(err.headers) && Object.keys(err.headers).length > 0)
+      this.set(err.headers);
 
-  this.app.emit('error', err, this);
+    this.app.emit('error', err, this);
 
-  // fix page title and description
-  if (!this.api) {
-    this.state.meta = this.state.meta || {};
-    this.state.meta.title = this.body.error;
-    this.state.meta.description = err.message;
-    debug('set `this.state.meta.title` to %s', this.state.meta.title);
-    debug('set `this.state.meta.desc` to %s', this.state.meta.description);
-  }
+    // fix page title and description
+    if (!this.api) {
+      this.state.meta = this.state.meta || {};
+      this.state.meta.title = this.body.error;
+      this.state.meta.description = err.message;
+    }
 
-  debug('type was %s', type);
+    switch (type) {
+      case 'html':
+        this.type = 'html';
 
-  switch (type) {
-    case 'html':
-      this.type = 'html';
-
-      if (this.status === 404) {
-        // render the 404 page
-        // https://github.com/koajs/koa/issues/646
-        if (hasRender) {
-          try {
-            debug('rendering 404 page');
-            await this.render('404');
-          } catch (err_) {
-            debug('could not find 404 page, using built-in 404 html', err_);
+        if (this.status === 404) {
+          // render the 404 page
+          // https://github.com/koajs/koa/issues/646
+          if (hasRender) {
+            try {
+              await this.render('404');
+            } catch (err_) {
+              logger.error(err_);
+              this.body = _404;
+            }
+          } else {
             this.body = _404;
           }
-        } else {
-          this.body = _404;
-        }
-      } else if (noReferrer || this.status === 500) {
-        // this prevents a redirect loop by detecting an empty Referrer
-        // ...otherwise it would reach the next conditional block which
-        // would endlessly rediret the user with `this.redirect('back')`
-        if (noReferrer) debug('prevented endless redirect loop!');
+        } else if (noReferrer || this.status === 500) {
+          // this prevents a redirect loop by detecting an empty Referrer
+          // ...otherwise it would reach the next conditional block which
+          // would endlessly rediret the user with `this.redirect('back')`
 
-        // flash an error message
-        if (hasFlash) this.flash('error', err.message);
+          // flash an error message
+          if (hasFlash) this.flash('error', err.message);
 
-        // render the 500 page
-        if (hasRender) {
-          try {
-            debug('rendering 500 page');
-            await this.render('500');
-          } catch (err_) {
-            debug('could not find 500 page, using built-in 500 html', err_);
+          // render the 500 page
+          if (hasRender) {
+            try {
+              await this.render('500');
+            } catch (err_) {
+              logger.error(err_);
+              this.body = _500;
+            }
+          } else {
             this.body = _500;
           }
         } else {
-          this.body = _500;
-        }
-      } else {
-        // flash an error message
-        if (hasFlash) this.flash('error', err.message);
+          // flash an error message
+          if (hasFlash) this.flash('error', err.message);
 
-        // TODO: until the issue is resolved, we need to add this here
-        // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
-        if (
-          this.sessionStore &&
-          this.sessionId &&
-          this.session &&
-          this.state.cookiesKey
-        ) {
-          await co
-            .wrap(this.sessionStore.set)
-            .call(this.sessionStore, this.sessionId, this.session);
-          this.cookies.set(
-            this.state.cookiesKey,
-            this.sessionId,
-            this.session.cookie
+          // TODO: until the issue is resolved, we need to add this here
+          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
+          if (
+            this.sessionStore &&
+            this.sessionId &&
+            this.session &&
+            cookiesKey
+          ) {
+            try {
+              await co
+                .wrap(this.sessionStore.set)
+                .call(this.sessionStore, this.sessionId, this.session);
+              this.cookies.set(cookiesKey, this.sessionId, this.session.cookie);
+            } catch (err) {
+              logger.error(err);
+              // eslint-disable-next-line max-depth
+              if (err.code === 'ERR_HTTP_HEADERS_SENT') return;
+            }
+          }
+
+          /*
+          // TODO: we need to add support for `koa-session-store` here
+          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
+          //
+          // these comments may no longer be valid and need reconsidered:
+          // 
+          // if we're using `koa-session-store` we need to add
+          // `this._session = new Session()`, and then run this:
+          await co.wrap(this._session._store.save).call(
+            this._session._store,
+            this._session._sid,
+            stringify(this.session)
           );
+          this.cookies.set(this._session._name, stringify({
+            _sid: this._session._sid
+          }), this._session._cookieOpts);
+          */
+
+          // redirect the user to the page they were just on
+          this.redirect('back');
         }
 
-        /*
-        // if we're using `koa-session-store` we need to add
-        // `this._session = new Session()`, and then run this:
-        await co.wrap(this._session._store.save).call(
-          this._session._store,
-          this._session._sid,
-          JSON.stringify(this.session)
-        );
-        this.cookies.set(this._session._name, JSON.stringify({
-          _sid: this._session._sid
-        }), this._session._cookieOpts);
-        */
+        break;
+      case 'json':
+        this.type = 'json';
+        this.body = stringify(this.body, null, 2);
+        break;
+      default:
+        this.type = this.api ? 'json' : 'text';
+        this.body = stringify(this.body, null, 2);
+        break;
+    }
 
-        // redirect the user to the page they were just on
-        this.redirect('back');
-      }
-
-      break;
-    case 'json':
-      this.type = 'json';
-      this.body = JSON.stringify(this.body, null, 2);
-      break;
-    default:
-      this.type = this.api ? 'json' : 'text';
-      this.body = JSON.stringify(this.body, null, 2);
-      break;
-  }
-
-  this.length = Buffer.byteLength(this.body);
-  this.res.end(this.body);
+    this.length = Buffer.byteLength(this.body);
+    this.res.end(this.body);
+  };
 }
 
 function makeAPIFriendly(ctx, message) {

@@ -10,36 +10,36 @@ const auth = require('koa-basic-auth');
 const errorHandler = require('..');
 
 const statusCodes = _.keys(http.STATUS_CODES)
-  .map(code => {
+  .map((code) => {
     return parseInt(code, 10);
   })
-  .filter(code => code >= 400);
+  .filter((code) => code >= 400);
 
 // this doesn't ensure 100% code coverage, but ensures that
 // the responses are sending proper Boom status messages
 // and that the status codes passed through `ctx.throw(code)`
 // are accurate sent in the response header's status code
 
-test.beforeEach(t => {
+test.beforeEach((t) => {
   // initialize our app
   t.context.app = new Koa();
 
   // override koa's undocumented error handler
-  t.context.app.context.onerror = errorHandler;
+  t.context.app.context.onerror = errorHandler();
 
   // set up some routes
   const router = new Router();
 
   // throw an error anywhere you want!
-  _.each(statusCodes, code => {
-    router.get(`/${code}`, ctx => ctx.throw(code));
+  _.each(statusCodes, (code) => {
+    router.get(`/${code}`, (ctx) => ctx.throw(code));
   });
 
-  router.get('/basic-auth', auth({ name: 'tj', pass: 'tobi' }), ctx => {
+  router.get('/basic-auth', auth({ name: 'tj', pass: 'tobi' }), (ctx) => {
     ctx.body = 'Hello World';
   });
 
-  router.get('/break-headers-sent', ctx => {
+  router.get('/break-headers-sent', (ctx) => {
     ctx.type = 'text/html';
     ctx.body = 'foo';
     ctx.res.end();
@@ -54,9 +54,9 @@ test.beforeEach(t => {
 });
 
 // check for response types
-_.each(['text/html', 'application/json', 'text/plain'], type => {
-  _.each(statusCodes, code => {
-    test.cb(`responds with ${type} for ${code} request`, t => {
+_.each(['text/html', 'application/json', 'text/plain'], (type) => {
+  _.each(statusCodes, (code) => {
+    test.cb(`responds with ${type} for ${code} request`, (t) => {
       request(t.context.app.listen())
         .get(`/${code}`)
         .set('Accept', type)
@@ -67,7 +67,7 @@ _.each(['text/html', 'application/json', 'text/plain'], type => {
   });
 });
 
-test.cb("Won't throw after sending headers", t => {
+test.cb("Won't throw after sending headers", (t) => {
   request(t.context.app.listen())
     .get('/break-headers-sent')
     .set('Accept', 'text/html')
@@ -75,7 +75,7 @@ test.cb("Won't throw after sending headers", t => {
     .end(t.end);
 });
 
-test.cb('Throws with WWW-Authenticate header on basic auth fail', t => {
+test.cb('Throws with WWW-Authenticate header on basic auth fail', (t) => {
   request(t.context.app.listen())
     .get('/basic-auth')
     .expect('WWW-Authenticate', 'Basic realm="Secure Area"')
