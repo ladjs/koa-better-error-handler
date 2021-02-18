@@ -199,7 +199,7 @@ function middleware(ctx) {
 
 If you specify `app.context.api = true` or set `ctx.api = true`, and if a Mongoose validation error message occurs that has more than one message (e.g. multiple fields were invalid) – then `err.message` will be joined by a comma instead of by `<li>`.
 
-Therefore if you _DO_ want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = false`, `ctx.api = false`, or simply make sure to not set them before using this error handler.
+Therefore if you *DO* want your API error messages to return HTML formatted error lists for Mongoose validation, then set `app.context.api = false`, `ctx.api = false`, or simply make sure to not set them before using this error handler.
 
 ```js
 try {
@@ -244,7 +244,7 @@ You can also specify a base URI in the environment variable for rendering as `pr
 [MIT](LICENSE) © [Nick Baugh](http://niftylettuce.com/)
 
 
-## 
+##
 
 [boom]: https://github.com/hapijs/boom
 

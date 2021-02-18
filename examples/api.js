@@ -20,8 +20,8 @@ app.use(koa404Handler);
 const router = new Router();
 
 // throw an error anywhere you want!
-router.get('/404', ctx => ctx.throw(404));
-router.get('/500', ctx => ctx.throw(500));
+router.get('/404', (ctx) => ctx.throw(404));
+router.get('/500', (ctx) => ctx.throw(500));
 
 // initialize routes on the app
 app.use(router.routes());

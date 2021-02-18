@@ -12,13 +12,40 @@ const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 
 // lodash
-const _isNumber = require('lodash.isnumber');
-const _isString = require('lodash.isstring');
-const _isObject = require('lodash.isobject');
-const _isFunction = require('lodash.isfunction');
 const _isError = require('lodash.iserror');
+const _isFunction = require('lodash.isfunction');
+const _isNumber = require('lodash.isnumber');
+const _isObject = require('lodash.isobject');
+const _isString = require('lodash.isstring');
 const _map = require('lodash.map');
 const _values = require('lodash.values');
+
+// NOTE: if you change this, be sure to sync in `forward-email`
+// <https://github.com/nodejs/node/blob/08dd4b1723b20d56fbedf37d52e736fe09715f80/lib/dns.js#L296-L320>
+const CODES_TO_RESPONSE_CODES = {
+  EADDRGETNETWORKPARAMS: 421,
+  EADDRINUSE: 421,
+  EAI_AGAIN: 421,
+  EBADFLAGS: 421,
+  EBADHINTS: 421,
+  ECANCELLED: 421,
+  ECONNREFUSED: 421,
+  ECONNRESET: 442,
+  EDESTRUCTION: 421,
+  EFORMERR: 421,
+  ELOADIPHLPAPI: 421,
+  ENETUNREACH: 421,
+  ENODATA: 421,
+  ENOMEM: 421,
+  ENOTFOUND: 421,
+  ENOTINITIALIZED: 421,
+  EPIPE: 421,
+  EREFUSED: 421,
+  ESERVFAIL: 421,
+  ETIMEOUT: 420
+};
+
+const RETRY_CODES = Object.keys(CODES_TO_RESPONSE_CODES);
 
 const opts = {
   encoding: 'utf8'
@@ -81,8 +108,13 @@ function errorHandler(
 
     // check if we have a boom error that specified
     // a status code already for us (and then use it)
-    if (_isObject(err.output) && _isNumber(err.output.statusCode))
+    if (_isObject(err.output) && _isNumber(err.output.statusCode)) {
       err.status = err.output.statusCode;
+    } else if (_isString(err.code) && RETRY_CODES.includes(err.code)) {
+      // check if this was a DNS error and if so
+      // then set status code for retries appropriately
+      err.status = CODES_TO_RESPONSE_CODES[err.code];
+    }
 
     if (!_isNumber(err.status)) err.status = 500;
 
@@ -186,7 +218,6 @@ function errorHandler(
               this.cookies.set(cookiesKey, this.sessionId, this.session.cookie);
             } catch (err) {
               logger.error(err);
-              // eslint-disable-next-line max-depth
               if (err.code === 'ERR_HTTP_HEADERS_SENT') return;
             }
           }
