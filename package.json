@@ -37,7 +37,6 @@
   ],
   "dependencies": {
     "@hapi/boom": "^9.1.1",
-    "ava": "3.11.1",
     "camelcase": "^6.2.0",
     "capitalize": "^2.0.3",
     "co": "^4.6.0",
@@ -58,6 +57,7 @@
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
     "@koa/router": "^10.0.0",
+    "ava": "3.11.1",
     "codecov": "^3.8.1",
     "cross-env": "^7.0.3",
     "eslint-config-xo-lass": "^1.0.5",
