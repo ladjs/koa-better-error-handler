@@ -36,7 +36,7 @@
     }
   ],
   "dependencies": {
-    "@hapi/boom": "^9.1.1",
+    "@hapi/boom": "^9.1.4",
     "camelcase": "^6.2.0",
     "capitalize": "^2.0.3",
     "co": "^4.6.0",
