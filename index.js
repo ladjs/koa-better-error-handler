@@ -1,15 +1,17 @@
 const fs = require('fs');
 const path = require('path');
+const process = require('process');
+const { Buffer } = require('buffer');
 
-const fastSafeStringify = require('fast-safe-stringify');
 const Boom = require('@hapi/boom');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
 const co = require('co');
-const htmlToText = require('html-to-text');
+const fastSafeStringify = require('fast-safe-stringify');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
+const { convert } = require('html-to-text');
 
 // lodash
 const _isError = require('lodash.iserror');
@@ -56,7 +58,7 @@ const opts = {
 const _404 = fs.readFileSync(path.join(__dirname, '404.html'), opts);
 const _500 = fs.readFileSync(path.join(__dirname, '500.html'), opts);
 
-const passportLocalMongooseErrorNames = [
+const passportLocalMongooseErrorNames = new Set([
   'AuthenticationError',
   'MissingPasswordError',
   'AttemptTooSoonError',
@@ -66,7 +68,7 @@ const passportLocalMongooseErrorNames = [
   'IncorrectUsernameError',
   'MissingUsernameError',
   'UserExistsError'
-];
+]);
 
 // initialize try/catch error handling right away
 // adapted from: https://github.com/koajs/onerror/blob/master/index.js
@@ -86,6 +88,20 @@ function errorHandler(
   return async function (err) {
     if (!err) return;
 
+    // nothing we can do here other
+    // than delegate to the app-level
+    // handler and log.
+    if (this.headerSent || !this.writable) {
+      err.headerSent = true;
+      this.app.emit('error', err, this);
+      this.app.emit(
+        'error',
+        new Error('Headers were already sent, returning early'),
+        this
+      );
+      return;
+    }
+
     const logger = useCtxLogger && this.logger ? this.logger : _logger;
 
     if (!_isError(err)) err = new Error(err);
@@ -102,7 +118,7 @@ function errorHandler(
     err = parseValidationError(this, err);
 
     // check if we threw just a status code in order to keep it simple
-    const val = parseInt(err.message, 10);
+    const val = Number.parseInt(err.message, 10);
     if (_isNumber(val) && val >= 400)
       err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
 
@@ -127,15 +143,6 @@ function errorHandler(
     // check if we're about to go into a possible endless redirect loop
     const noReferrer = this.get('Referrer') === '';
 
-    // nothing we can do here other
-    // than delegate to the app-level
-    // handler and log.
-    if (this.headerSent || !this.writable) {
-      logger.error(new Error('Headers were already sent, returning early'));
-      err.headerSent = true;
-      return;
-    }
-
     // populate the status and body with `boom` error message payload
     // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
     err.status = err.status || 500;
@@ -159,8 +166,13 @@ function errorHandler(
     // fix page title and description
     if (!this.api) {
       this.state.meta = this.state.meta || {};
-      this.state.meta.title = this.body.error;
-      this.state.meta.description = err.message;
+      if (!err.no_translate && _isFunction(this.request.t)) {
+        this.state.meta.title = this.request.t(this.body.error);
+        this.state.meta.description = this.request.t(err.message);
+      } else {
+        this.state.meta.title = this.body.error;
+        this.state.meta.description = err.message;
+      }
     }
 
     switch (type) {
@@ -227,7 +239,7 @@ function errorHandler(
           // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
           //
           // these comments may no longer be valid and need reconsidered:
-          // 
+          //
           // if we're using `koa-session-store` we need to add
           // `this._session = new Session()`, and then run this:
           await co.wrap(this._session._store.save).call(
@@ -261,16 +273,23 @@ function errorHandler(
 }
 
 function makeAPIFriendly(ctx, message) {
-  return !ctx.api
-    ? message
-    : htmlToText.fromString(message, {
+  return ctx.api
+    ? convert(message, {
         wordwrap: false,
-        linkHrefBaseUrl: process.env.ERROR_HANDLER_BASE_URL
-          ? process.env.ERROR_HANDLER_BASE_URL
-          : '',
         hideLinkHrefIfSameAsText: true,
-        ignoreImage: true
-      });
+        selectors: [
+          {
+            selector: 'a',
+            options: {
+              baseUrl: process.env.ERROR_HANDLER_BASE_URL
+                ? process.env.ERROR_HANDLER_BASE_URL
+                : ''
+            }
+          },
+          { selector: 'img', format: 'skip' }
+        ]
+      })
+    : message;
 }
 
 function parseValidationError(ctx, err) {
@@ -281,7 +300,7 @@ function parseValidationError(ctx, err) {
       : message;
 
   // passport-local-mongoose support
-  if (passportLocalMongooseErrorNames.includes(err.name)) {
+  if (passportLocalMongooseErrorNames.has(err.name)) {
     err.message = translate(err.message);
     // this ensures the error shows up client-side
     err.status = 400;

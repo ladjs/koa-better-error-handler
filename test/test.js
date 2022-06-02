@@ -1,17 +1,18 @@
 const http = require('http');
-const test = require('ava');
-const Router = require('@koa/router');
-const request = require('supertest');
+
 const Koa = require('koa');
-const _ = require('lodash');
-const koa404Handler = require('koa-404-handler');
+const Router = require('@koa/router');
 const auth = require('koa-basic-auth');
+const getPort = require('get-port');
+const koa404Handler = require('koa-404-handler');
+const request = require('supertest');
+const test = require('ava');
 
 const errorHandler = require('..');
 
-const statusCodes = _.keys(http.STATUS_CODES)
+const statusCodes = Object.keys(http.STATUS_CODES)
   .map((code) => {
-    return parseInt(code, 10);
+    return Number.parseInt(code, 10);
   })
   .filter((code) => code >= 400);
 
@@ -20,65 +21,86 @@ const statusCodes = _.keys(http.STATUS_CODES)
 // and that the status codes passed through `ctx.throw(code)`
 // are accurate sent in the response header's status code
 
-test.beforeEach((t) => {
+test.beforeEach(async (t) => {
   // initialize our app
-  t.context.app = new Koa();
+  const app = new Koa();
 
   // override koa's undocumented error handler
-  t.context.app.context.onerror = errorHandler();
+  app.context.onerror = errorHandler();
 
   // set up some routes
   const router = new Router();
 
   // throw an error anywhere you want!
-  _.each(statusCodes, (code) => {
+  for (const code of statusCodes) {
     router.get(`/${code}`, (ctx) => ctx.throw(code));
-  });
+  }
 
   router.get('/basic-auth', auth({ name: 'tj', pass: 'tobi' }), (ctx) => {
     ctx.body = 'Hello World';
   });
 
+  router.get('/html', (ctx) => {
+    ctx.api = true;
+    ctx.throw(
+      400,
+      '<strong>Hello world</strong>\n\nHow are you?\n\n<a href="https://github.com">github.com</a>'
+    );
+  });
+
   router.get('/break-headers-sent', (ctx) => {
     ctx.type = 'text/html';
-    ctx.body = 'foo';
-    ctx.res.end();
+    ctx.status = 200;
+    ctx.res.end('foo');
     ctx.throw(404);
   });
 
   // initialize routes on the app
-  t.context.app.use(router.routes());
+  app.use(router.routes());
 
   // use koa-404-handler
-  t.context.app.use(koa404Handler);
+  app.use(koa404Handler);
+
+  const port = await getPort();
+
+  t.context.app = request.agent(app.listen(port));
 });
 
 // check for response types
-_.each(['text/html', 'application/json', 'text/plain'], (type) => {
-  _.each(statusCodes, (code) => {
-    test.cb(`responds with ${type} for ${code} request`, (t) => {
-      request(t.context.app.listen())
+for (const type of ['text/html', 'application/json', 'text/plain']) {
+  for (const code of statusCodes) {
+    test(`responds with ${type} for ${code} request`, async (t) => {
+      const res = await t.context.app
         .get(`/${code}`)
         .set('Accept', type)
-        .expect(code)
-        .expect('Content-Type', new RegExp(type))
-        .end(t.end);
+        .expect('Content-Type', new RegExp(type));
+      t.is(res.status, code);
     });
-  });
-});
+  }
+}
 
-test.cb("Won't throw after sending headers", (t) => {
-  request(t.context.app.listen())
+test("Won't throw after sending headers", async (t) => {
+  const res = await t.context.app
     .get('/break-headers-sent')
-    .set('Accept', 'text/html')
-    .expect(200)
-    .end(t.end);
+    .set('Accept', 'text/html');
+  t.is(res.text, 'foo');
+  t.is(res.status, 200);
 });
 
-test.cb('Throws with WWW-Authenticate header on basic auth fail', (t) => {
-  request(t.context.app.listen())
+test('Throws with WWW-Authenticate header on basic auth fail', async (t) => {
+  const res = await t.context.app
     .get('/basic-auth')
-    .expect('WWW-Authenticate', 'Basic realm="Secure Area"')
-    .expect(401)
-    .end(t.end);
+    .expect('WWW-Authenticate', 'Basic realm="Secure Area"');
+  t.is(res.status, 401);
+});
+
+test('makes API friendly error messages without HTML', async (t) => {
+  const res = await t.context.app
+    .get('/html')
+    .set('Accept', 'application/json');
+  t.is(res.status, 400);
+  t.is(
+    res.body.message,
+    'Hello world How are you? github.com [https://github.com]'
+  );
 });
