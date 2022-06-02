@@ -79,6 +79,8 @@
     "node": ">= 14"
   },
   "files": [
+    "404.html",
+    "500.html",
     "index.js"
   ],
   "homepage": "https://github.com/ladjs/koa-better-error-handler",
