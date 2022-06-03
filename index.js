@@ -53,6 +53,9 @@ const opts = {
   encoding: 'utf8'
 };
 
+//
+// TODO: we could eventually use this https://github.com/alexphelps/server-error-pages/
+//
 // error pages were inspired by HTML5 Boilerplate's default 404.html page
 // https://github.com/h5bp/html5-boilerplate/blob/master/src/404.html
 const _404 = fs.readFileSync(path.join(__dirname, '404.html'), opts);
@@ -192,7 +195,7 @@ function errorHandler(
           } else {
             this.body = _404;
           }
-        } else if (noReferrer || this.status === 500) {
+        } else if (noReferrer) {
           // this prevents a redirect loop by detecting an empty Referrer
           // ...otherwise it would reach the next conditional block which
           // would endlessly rediret the user with `this.redirect('back')`
@@ -200,7 +203,7 @@ function errorHandler(
           // flash an error message
           if (hasFlash) this.flash('error', err.message);
 
-          // render the 500 page
+          // render the 5xx page
           if (hasRender) {
             try {
               await this.render('500');
