@@ -187,11 +187,10 @@ function errorHandler(
     this.app.emit('error', err, this);
 
     // fix page title and description
-    if (!this.api) {
-      this.state.meta = this.state.meta || {};
-      this.state.meta.title = this.body.error;
-      this.state.meta.description = err.message;
-    }
+    const meta = {
+      title: this.body.error,
+      description: err.message
+    };
 
     switch (type) {
       case 'html':
@@ -202,7 +201,7 @@ function errorHandler(
           // https://github.com/koajs/koa/issues/646
           if (hasRender) {
             try {
-              await this.render('404');
+              await this.render('404', { meta });
             } catch (err_) {
               logger.error(err_);
               this.body = _404;
@@ -221,7 +220,7 @@ function errorHandler(
           // render the 5xx page
           if (hasRender) {
             try {
-              await this.render('500');
+              await this.render('500', { meta });
             } catch (err_) {
               logger.error(err_);
               this.body = _500;
