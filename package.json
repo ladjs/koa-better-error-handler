@@ -32,7 +32,7 @@
   ],
   "dependencies": {
     "@hapi/boom": "^10.0.0",
-    "camelcase": "^6.3.0",
+    "camelcase": "6",
     "capitalize": "^2.0.4",
     "co": "^4.6.0",
     "fast-safe-stringify": "^2.1.1",
@@ -45,17 +45,17 @@
     "lodash.isstring": "^4.0.1",
     "lodash.map": "^4.6.0",
     "lodash.values": "^4.3.0",
+    "redis-errors": "^1.2.0",
     "statuses": "^2.0.1",
     "toidentifier": "^1.0.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.0.2",
-    "@commitlint/config-conventional": "^17.0.2",
+    "@commitlint/cli": "^17.0.3",
+    "@commitlint/config-conventional": "^17.0.3",
     "@koa/router": "^10.1.1",
     "ava": "^4.3.0",
-    "codecov": "^3.8.2",
     "cross-env": "^7.0.3",
-    "eslint-config-xo-lass": "^1.0.6",
+    "eslint-config-xo-lass": "^2.0.1",
     "fixpack": "^4.0.0",
     "get-port": "5",
     "husky": "^8.0.1",
@@ -66,14 +66,14 @@
     "koa-convert": "^2.0.0",
     "koa-generic-session": "^2.3.0",
     "koa-redis": "^4.0.1",
-    "lint-staged": "^13.0.0",
+    "lint-staged": "^13.0.3",
     "nyc": "^15.1.0",
-    "redis": "^4.1.0",
-    "remark-cli": "^10.0.1",
-    "remark-preset-github": "^4.0.2",
+    "redis": "^4.1.1",
+    "remark-cli": "^11.0.0",
+    "remark-preset-github": "^4.0.4",
     "rimraf": "^3.0.2",
     "supertest": "^6.2.3",
-    "xo": "^0.49.0"
+    "xo": "^0.50.0"
   },
   "engines": {
     "node": ">= 14"
@@ -111,11 +111,9 @@
   "main": "index.js",
   "repository": "ladjs/koa-better-error-handler",
   "scripts": {
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "lint": "xo && remark . -qfo",
-    "precommit": "lint-staged && npm test",
+    "lint": "xo --fix && remark . -qfo && fixpack",
     "prepare": "husky install",
-    "test": "npm run lint && npm run test-coverage",
-    "test-coverage": "cross-env NODE_ENV=test nyc ava"
+    "pretest": "npm run lint",
+    "test": "cross-env NODE_ENV=test nyc ava"
   }
 }

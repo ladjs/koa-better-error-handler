@@ -1,7 +1,6 @@
 # koa-better-error-handler
 
-[![build status](https://img.shields.io/travis/ladjs/koa-better-error-handler.svg)](https://travis-ci.org/ladjs/koa-better-error-handler)
-[![code coverage](https://img.shields.io/codecov/c/github/ladjs/koa-better-error-handler.svg)](https://codecov.io/gh/ladjs/koa-better-error-handler)
+[![build status](https://github.com/ladjs/koa-better-error-handler/actions/workflows/ci.yml/badge.svg)](https://github.com/ladjs/koa-better-error-handler/actions/workflows/ci.yml)
 [![code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg)](https://github.com/sindresorhus/xo)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![made with lass](https://img.shields.io/badge/made_with-lass-95CC28.svg)](https://lass.js.org)
@@ -24,6 +23,8 @@
 
 ## Features
 
+* Detects Node.js DNS errors (e.g. `ETIMEOUT` and `EBADFAMILY`) and sends 408 Client Timeout error
+* Detects Redis errors (e.g. ioredis' MaxRetriesPerRequestError) and sends 408 Client Timeout error
 * Uses [Boom][boom] for making error messages beautiful (see [User Friendly Responses](#user-friendly-responses) below)
 * Simply a better error handler (doesn't remove all headers [like the built-in one does][gh-issue])
 * Doesn't make all status codes 500 ([like the built-in Koa error handler does][gh-500-issue])

@@ -11,6 +11,7 @@ const fastSafeStringify = require('fast-safe-stringify');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
+const { RedisError } = require('redis-errors');
 const { convert } = require('html-to-text');
 
 // lodash
@@ -22,32 +23,33 @@ const _isString = require('lodash.isstring');
 const _map = require('lodash.map');
 const _values = require('lodash.values');
 
-// NOTE: if you change this, be sure to sync in `forward-email`
 // <https://github.com/nodejs/node/blob/08dd4b1723b20d56fbedf37d52e736fe09715f80/lib/dns.js#L296-L320>
-const CODES_TO_RESPONSE_CODES = {
-  EADDRGETNETWORKPARAMS: 421,
-  EADDRINUSE: 421,
-  EAI_AGAIN: 421,
-  EBADFLAGS: 421,
-  EBADHINTS: 421,
-  ECANCELLED: 421,
-  ECONNREFUSED: 421,
-  ECONNRESET: 442,
-  EDESTRUCTION: 421,
-  EFORMERR: 421,
-  ELOADIPHLPAPI: 421,
-  ENETUNREACH: 421,
-  ENODATA: 421,
-  ENOMEM: 421,
-  ENOTFOUND: 421,
-  ENOTINITIALIZED: 421,
-  EPIPE: 421,
-  EREFUSED: 421,
-  ESERVFAIL: 421,
-  ETIMEOUT: 420
-};
-
-const RETRY_CODES = Object.keys(CODES_TO_RESPONSE_CODES);
+const DNS_RETRY_CODES = new Set([
+  'EADDRGETNETWORKPARAMS',
+  'EBADFAMILY',
+  'EBADFLAGS',
+  'EBADHINTS',
+  'EBADNAME',
+  'EBADQUERY',
+  'EBADRESP',
+  'EBADSTR',
+  'ECANCELLED',
+  'ECONNREFUSED',
+  'EDESTRUCTION',
+  'EFILE',
+  'EFORMERR',
+  'ELOADIPHLPAPI',
+  'ENODATA',
+  'ENOMEM',
+  'ENONAME',
+  'ENOTFOUND',
+  'ENOTIMP',
+  'ENOTINITIALIZED',
+  'EOF',
+  'EREFUSED',
+  'ESERVFAIL',
+  'ETIMEOUT'
+]);
 
 const opts = {
   encoding: 'utf8'
@@ -73,13 +75,19 @@ const passportLocalMongooseErrorNames = new Set([
   'UserExistsError'
 ]);
 
+const passportLocalMongooseTooManyRequests = new Set([
+  'AttemptTooSoonError',
+  'TooManyAttemptsError'
+]);
+
+//
 // initialize try/catch error handling right away
 // adapted from: https://github.com/koajs/onerror/blob/master/index.js
 // https://github.com/koajs/examples/issues/20#issuecomment-31568401
 //
 // inspired by:
-// https://goo.gl/62oU7P
-// https://goo.gl/8Z7aMe
+// https://github.com/koajs/koa/blob/9f80296fc49fa0c03db939e866215f3721fcbbc6/lib/context.js#L101-L139
+//
 
 function errorHandler(
   cookiesKey = false,
@@ -105,6 +113,10 @@ function errorHandler(
       return;
     }
 
+    // translate messages
+    const translate = (message) =>
+      _isFunction(this.request.t) ? this.request.t(message) : message;
+
     const logger = useCtxLogger && this.logger ? this.logger : _logger;
 
     if (!_isError(err)) err = new Error(err);
@@ -112,27 +124,35 @@ function errorHandler(
     const type = this.accepts(['text', 'json', 'html']);
 
     if (!type) {
-      logger.warn('invalid type, sending 406 error');
       err.status = 406;
-      err.message = Boom.notAcceptable().output.payload;
+      err.message = translate(Boom.notAcceptable().output.payload);
     }
 
-    // parse mongoose validation errors
-    err = parseValidationError(this, err);
-
-    // check if we threw just a status code in order to keep it simple
     const val = Number.parseInt(err.message, 10);
-    if (_isNumber(val) && val >= 400)
+    if (_isNumber(val) && val >= 400 && val < 600) {
+      // check if we threw just a status code in order to keep it simple
       err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
+      err.message = translate(err.message);
+    } else if (err instanceof RedisError) {
+      // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
+      err.status = 408;
+      err.message = translate(Boom.clientTimeout().output.payload);
+    } else {
+      // parse mongoose validation errors
+      err = parseValidationError(this, err, translate);
+    }
+
+    // TODO: mongodb errors that are not Mongoose ValidationError
 
     // check if we have a boom error that specified
     // a status code already for us (and then use it)
     if (_isObject(err.output) && _isNumber(err.output.statusCode)) {
       err.status = err.output.statusCode;
-    } else if (_isString(err.code) && RETRY_CODES.includes(err.code)) {
+    } else if (_isString(err.code) && DNS_RETRY_CODES.has(err.code)) {
       // check if this was a DNS error and if so
       // then set status code for retries appropriately
-      err.status = CODES_TO_RESPONSE_CODES[err.code];
+      err.status = 408;
+      err.message = translate(Boom.clientTimeout().output.payload);
     }
 
     if (!_isNumber(err.status)) err.status = 500;
@@ -169,13 +189,8 @@ function errorHandler(
     // fix page title and description
     if (!this.api) {
       this.state.meta = this.state.meta || {};
-      if (!err.no_translate && _isFunction(this.request.t)) {
-        this.state.meta.title = this.request.t(this.body.error);
-        this.state.meta.description = this.request.t(err.message);
-      } else {
-        this.state.meta.title = this.body.error;
-        this.state.meta.description = err.message;
-      }
+      this.state.meta.title = this.body.error;
+      this.state.meta.description = err.message;
     }
 
     switch (type) {
@@ -295,21 +310,14 @@ function makeAPIFriendly(ctx, message) {
     : message;
 }
 
-function parseValidationError(ctx, err) {
-  // translate messages
-  const translate = (message) =>
-    !err.no_translate && _isFunction(ctx.request.t)
-      ? ctx.request.t(message)
-      : message;
-
+function parseValidationError(ctx, err, translate) {
   // passport-local-mongoose support
   if (passportLocalMongooseErrorNames.has(err.name)) {
-    err.message = translate(err.message);
+    if (!err.no_translate) err.message = translate(err.message);
     // this ensures the error shows up client-side
     err.status = 400;
     // 429 = too many requests
-    if (['AttemptTooSoonError', 'TooManyAttemptsError'].includes(err.name))
-      err.status = 429;
+    if (passportLocalMongooseTooManyRequests.has(err.name)) err.status = 429;
     return err;
   }
 
@@ -335,9 +343,12 @@ function parseValidationError(ctx, err) {
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
   if (_values(err.errors).length === 1) {
-    err.message = translate(_values(err.errors)[0].message);
+    err.message = _values(err.errors)[0].message;
+    if (!err.no_translate) err.message = translate(err.message);
   } else {
-    const errors = _map(_map(_values(err.errors), 'message'), translate);
+    const errors = _map(_map(_values(err.errors), 'message'), (message) =>
+      err.no_translate ? message : translate(message)
+    );
     err.message = makeAPIFriendly(
       ctx,
       `<ul class="text-left mb-0"><li>${errors.join('</li><li>')}</li></ul>`
