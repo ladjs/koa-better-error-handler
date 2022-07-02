@@ -130,7 +130,10 @@ function errorHandler(
       // check if we threw just a status code in order to keep it simple
       err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
       err.message = translate(err.message);
-    } else if (err.name === 'RedisError') {
+    } else if (
+      err.name === 'RedisError' ||
+      Object.getPrototypeOf(err.constructor).name === 'RedisError'
+    ) {
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
       err.status = 408;
       err.message = translate(Boom.clientTimeout().output.payload);
