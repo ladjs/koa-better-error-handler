@@ -6,13 +6,13 @@ const { Buffer } = require('buffer');
 const Boom = require('@hapi/boom');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
-const co = require('co');
 const fastSafeStringify = require('fast-safe-stringify');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 const { RedisError } = require('redis-errors');
 const { convert } = require('html-to-text');
+const MongooseError = require('mongoose/lib/error');
 
 // lodash
 const _isError = require('lodash.iserror');
@@ -90,7 +90,6 @@ const passportLocalMongooseTooManyRequests = new Set([
 //
 
 function errorHandler(
-  cookiesKey = false,
   _logger = console,
   useCtxLogger = true, // useful if you have ctx.logger (e.g. you're using Cabin's middleware)
   stringify = fastSafeStringify // you could alternatively use JSON.stringify
@@ -137,12 +136,26 @@ function errorHandler(
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
       err.status = 408;
       err.message = translate(Boom.clientTimeout().output.payload);
-    } else {
+    } else if (passportLocalMongooseErrorNames.has(err.name)) {
+      // passport-local-mongoose support
+      if (!err.no_translate) err.message = translate(err.message);
+      // this ensures the error shows up client-side
+      err.status = 400;
+      // 429 = too many requests
+      if (passportLocalMongooseTooManyRequests.has(err.name)) err.status = 429;
+    } else if (err.name === 'ValidationError') {
       // parse mongoose validation errors
       err = parseValidationError(this, err, translate);
+    } else if (
+      err instanceof MongooseError &&
+      !(err instanceof MongooseError.ValidationError) &&
+      !(err instanceof MongooseError.ValidatorError) &&
+      !(err instanceof MongooseError.VersionError)
+    ) {
+      // parse mongoose (and mongodb connection errors)
+      err.status = 408;
+      err.message = translate(Boom.clientTimeout().output.payload);
     }
-
-    // TODO: mongodb errors that are not Mongoose ValidationError
 
     // check if we have a boom error that specified
     // a status code already for us (and then use it)
@@ -162,9 +175,6 @@ function errorHandler(
 
     // check if there is a view rendering engine binding `this.render`
     const hasRender = _isFunction(this.render);
-
-    // check if we're about to go into a possible endless redirect loop
-    const noReferrer = this.get('Referrer') === '';
 
     // populate the status and body with `boom` error message payload
     // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
@@ -209,11 +219,7 @@ function errorHandler(
           } else {
             this.body = _404;
           }
-        } else if (noReferrer) {
-          // this prevents a redirect loop by detecting an empty Referrer
-          // ...otherwise it would reach the next conditional block which
-          // would endlessly rediret the user with `this.redirect('back')`
-
+        } else {
           // flash an error message
           if (hasFlash) this.flash('error', err.message);
 
@@ -228,49 +234,6 @@ function errorHandler(
           } else {
             this.body = _500;
           }
-        } else {
-          // flash an error message
-          if (hasFlash) this.flash('error', err.message);
-
-          // TODO: until the issue is resolved, we need to add this here
-          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
-          if (
-            this.sessionStore &&
-            this.sessionId &&
-            this.session &&
-            cookiesKey
-          ) {
-            try {
-              await co
-                .wrap(this.sessionStore.set)
-                .call(this.sessionStore, this.sessionId, this.session);
-              this.cookies.set(cookiesKey, this.sessionId, this.session.cookie);
-            } catch (err) {
-              logger.error(err);
-              if (err.code === 'ERR_HTTP_HEADERS_SENT') return;
-            }
-          }
-
-          /*
-          // TODO: we need to add support for `koa-session-store` here
-          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
-          //
-          // these comments may no longer be valid and need reconsidered:
-          //
-          // if we're using `koa-session-store` we need to add
-          // `this._session = new Session()`, and then run this:
-          await co.wrap(this._session._store.save).call(
-            this._session._store,
-            this._session._sid,
-            stringify(this.session)
-          );
-          this.cookies.set(this._session._name, stringify({
-            _sid: this._session._sid
-          }), this._session._cookieOpts);
-          */
-
-          // redirect the user to the page they were just on
-          this.redirect('back');
         }
 
         break;
@@ -309,20 +272,8 @@ function makeAPIFriendly(ctx, message) {
     : message;
 }
 
+// inspired by https://github.com/syntagma/mongoose-error-helper
 function parseValidationError(ctx, err, translate) {
-  // passport-local-mongoose support
-  if (passportLocalMongooseErrorNames.has(err.name)) {
-    if (!err.no_translate) err.message = translate(err.message);
-    // this ensures the error shows up client-side
-    err.status = 400;
-    // 429 = too many requests
-    if (passportLocalMongooseTooManyRequests.has(err.name)) err.status = 429;
-    return err;
-  }
-
-  // inspired by https://github.com/syntagma/mongoose-error-helper
-  if (err.name !== 'ValidationError') return err;
-
   // transform the error messages to be humanized as adapted from:
   // https://github.com/niftylettuce/mongoose-validation-error-transform
   err.errors = _map(err.errors, (error) => {

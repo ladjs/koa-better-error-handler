@@ -7,6 +7,8 @@ const getPort = require('get-port');
 const koa404Handler = require('koa-404-handler');
 const request = require('supertest');
 const test = require('ava');
+const { RedisError } = require('redis-errors');
+const MongooseError = require('mongoose/lib/error');
 
 const errorHandler = require('..');
 
@@ -53,6 +55,14 @@ test.beforeEach(async (t) => {
     ctx.status = 200;
     ctx.res.end('foo');
     ctx.throw(404);
+  });
+
+  router.get('/redis-error', (ctx) => {
+    ctx.throw(new RedisError('oops'));
+  });
+
+  router.get('/mongoose-error', (ctx) => {
+    ctx.throw(new MongooseError('oops'));
   });
 
   // initialize routes on the app
@@ -103,4 +113,14 @@ test('makes API friendly error messages without HTML', async (t) => {
     res.body.message,
     'Hello world How are you? github.com [https://github.com]'
   );
+});
+
+test('throws 408 on redis error', async (t) => {
+  const res = await t.context.app.get('/redis-error');
+  t.is(res.status, 408);
+});
+
+test('throws 408 on mongoose error', async (t) => {
+  const res = await t.context.app.get('/mongoose-error');
+  t.is(res.status, 408);
 });

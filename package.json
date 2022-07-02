@@ -34,7 +34,6 @@
     "@hapi/boom": "^10.0.0",
     "camelcase": "6",
     "capitalize": "^2.0.4",
-    "co": "^4.6.0",
     "fast-safe-stringify": "^2.1.1",
     "html-to-text": "^8.2.0",
     "humanize-string": "2",
@@ -45,6 +44,7 @@
     "lodash.isstring": "^4.0.1",
     "lodash.map": "^4.6.0",
     "lodash.values": "^4.3.0",
+    "mongoose": "^6.4.2",
     "redis-errors": "^1.2.0",
     "statuses": "^2.0.1",
     "toidentifier": "^1.0.1"
