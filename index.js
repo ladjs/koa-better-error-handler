@@ -10,9 +10,7 @@ const fastSafeStringify = require('fast-safe-stringify');
 const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
-const { RedisError } = require('redis-errors');
 const { convert } = require('html-to-text');
-const MongooseError = require('mongoose/lib/error');
 
 // lodash
 const _isError = require('lodash.iserror');
@@ -132,7 +130,7 @@ function errorHandler(
       // check if we threw just a status code in order to keep it simple
       err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
       err.message = translate(err.message);
-    } else if (err instanceof RedisError) {
+    } else if (err.name === 'RedisError') {
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
       err.status = 408;
       err.message = translate(Boom.clientTimeout().output.payload);
@@ -143,18 +141,16 @@ function errorHandler(
       err.status = 400;
       // 429 = too many requests
       if (passportLocalMongooseTooManyRequests.has(err.name)) err.status = 429;
-    } else if (err.name === 'ValidationError') {
-      // parse mongoose validation errors
-      err = parseValidationError(this, err, translate);
-    } else if (
-      err instanceof MongooseError &&
-      !(err instanceof MongooseError.ValidationError) &&
-      !(err instanceof MongooseError.ValidatorError) &&
-      !(err instanceof MongooseError.VersionError)
-    ) {
+    } else if (err.name === 'MongooseError') {
       // parse mongoose (and mongodb connection errors)
       err.status = 408;
       err.message = translate(Boom.clientTimeout().output.payload);
+    } else if (
+      err.name === 'ValidationError' &&
+      Object.getPrototypeOf(err.constructor).name === 'MongooseError'
+    ) {
+      // parse mongoose validation errors
+      err = parseValidationError(this, err, translate);
     }
 
     // check if we have a boom error that specified
