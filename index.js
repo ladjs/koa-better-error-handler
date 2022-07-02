@@ -132,6 +132,7 @@ function errorHandler(
       err.message = translate(err.message);
     } else if (
       err.name === 'RedisError' ||
+      err.name === 'MaxRetriesPerRequestError' ||
       Object.getPrototypeOf(err.constructor).name === 'RedisError'
     ) {
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
