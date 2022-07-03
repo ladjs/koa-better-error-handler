@@ -34,6 +34,7 @@
     "@hapi/boom": "^10.0.0",
     "camelcase": "6",
     "capitalize": "^2.0.4",
+    "co": "^4.6.0",
     "fast-safe-stringify": "^2.1.1",
     "html-to-text": "^8.2.0",
     "humanize-string": "2",

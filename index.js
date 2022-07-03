@@ -3,6 +3,7 @@ const path = require('path');
 const process = require('process');
 const { Buffer } = require('buffer');
 
+const co = require('co');
 const Boom = require('@hapi/boom');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
@@ -88,6 +89,7 @@ const passportLocalMongooseTooManyRequests = new Set([
 //
 
 function errorHandler(
+  cookiesKey = false,
   _logger = console,
   useCtxLogger = true, // useful if you have ctx.logger (e.g. you're using Cabin's middleware)
   stringify = fastSafeStringify // you could alternatively use JSON.stringify
@@ -176,6 +178,9 @@ function errorHandler(
     // check if there is a view rendering engine binding `this.render`
     const hasRender = _isFunction(this.render);
 
+    // check if we're about to go into a possible endless redirect loop
+    const noReferrer = this.get('Referrer') === '';
+
     // populate the status and body with `boom` error message payload
     // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
     err.status = err.status || 500;
@@ -219,7 +224,7 @@ function errorHandler(
           } else {
             this.body = _404;
           }
-        } else {
+        } else if (noReferrer || this.status >= 500) {
           // flash an error message
           if (hasFlash) this.flash('error', err.message);
 
@@ -234,6 +239,53 @@ function errorHandler(
           } else {
             this.body = _500;
           }
+        } else {
+          //
+          // attempt to redirect the user back
+          //
+
+          // flash an error message
+          if (hasFlash) this.flash('error', err.message);
+
+          // TODO: until the issue is resolved, we need to add this here
+          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
+          if (
+            this.sessionStore &&
+            this.sessionId &&
+            this.session &&
+            cookiesKey
+          ) {
+            try {
+              await co
+                .wrap(this.sessionStore.set)
+                .call(this.sessionStore, this.sessionId, this.session);
+              this.cookies.set(cookiesKey, this.sessionId, this.session.cookie);
+            } catch (err) {
+              logger.error(err);
+              if (err.code === 'ERR_HTTP_HEADERS_SENT') return;
+            }
+          }
+
+          /*
+          // TODO: we need to add support for `koa-session-store` here
+          // <https://github.com/koajs/generic-session/pull/95#issuecomment-246308544>
+          //
+          // these comments may no longer be valid and need reconsidered:
+          //
+          // if we're using `koa-session-store` we need to add
+          // `this._session = new Session()`, and then run this:
+          await co.wrap(this._session._store.save).call(
+            this._session._store,
+            this._session._sid,
+            stringify(this.session)
+          );
+          this.cookies.set(this._session._name, stringify({
+            _sid: this._session._sid
+          }), this._session._cookieOpts);
+          */
+
+          // redirect the user to the page they were just on
+          this.redirect('back');
         }
 
         break;
