@@ -319,7 +319,8 @@ function makeAPIFriendly(ctx, message) {
             }
           },
           { selector: 'img', format: 'skip' }
-        ]
+        ],
+        linkBrackets: false
       })
     : message;
 }
