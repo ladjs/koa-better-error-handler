@@ -136,7 +136,8 @@ function errorHandler(
       err.message === 'Connection is closed.' ||
       err.name === 'RedisError' ||
       err.name === 'MaxRetriesPerRequestError' ||
-      (err.constructor && Object.getPrototypeOf(err.constructor).name === 'RedisError')
+      (err.constructor &&
+        Object.getPrototypeOf(err.constructor).name === 'RedisError')
     ) {
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
       err.status = 408;
