@@ -133,6 +133,7 @@ function errorHandler(
       err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
       err.message = translate(err.message);
     } else if (
+      err.message === 'Connection is closed.' ||
       err.name === 'RedisError' ||
       err.name === 'MaxRetriesPerRequestError' ||
       Object.getPrototypeOf(err.constructor).name === 'RedisError'
