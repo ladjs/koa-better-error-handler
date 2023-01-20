@@ -1,4 +1,4 @@
-const http = require('http');
+const http = require('node:http');
 
 const Koa = require('koa');
 const Router = require('@koa/router');

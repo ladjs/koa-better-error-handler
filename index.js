@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const process = require('process');
-const { Buffer } = require('buffer');
+const fs = require('node:fs');
+const path = require('node:path');
+const process = require('node:process');
+const { Buffer } = require('node:buffer');
 
 const co = require('co');
 const Boom = require('@hapi/boom');
@@ -124,7 +124,7 @@ function errorHandler(
 
     if (!type) {
       err.status = 406;
-      err.message = translate(Boom.notAcceptable().output.payload);
+      err.message = translate(Boom.notAcceptable().output.payload.message);
     }
 
     const val = Number.parseInt(err.message, 10);
@@ -141,7 +141,7 @@ function errorHandler(
     ) {
       // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
       err.status = 408;
-      err.message = translate(Boom.clientTimeout().output.payload);
+      err.message = translate(Boom.clientTimeout().output.payload.message);
     } else if (passportLocalMongooseErrorNames.has(err.name)) {
       // passport-local-mongoose support
       if (!err.no_translate) err.message = translate(err.message);
@@ -152,13 +152,26 @@ function errorHandler(
     } else if (err.name === 'MongooseError') {
       // parse mongoose (and mongodb connection errors)
       err.status = 408;
-      err.message = translate(Boom.clientTimeout().output.payload);
+      err.message = translate(Boom.clientTimeout().output.payload.message);
     } else if (
       err.name === 'ValidationError' &&
       Object.getPrototypeOf(err.constructor).name === 'MongooseError'
     ) {
       // parse mongoose validation errors
       err = parseValidationError(this, err, translate);
+    } else if (
+      // prevent code related bugs from
+      // displaying to users in production environments
+      // (and log as a fatal error)
+      err instanceof TypeError ||
+      err instanceof SyntaxError ||
+      err instanceof ReferenceError ||
+      err instanceof RangeError ||
+      err instanceof URIError ||
+      err instanceof EvalError
+    ) {
+      logger.fatal(err, { isCodeBug: true });
+      err.message = translate(Boom.internal().output.payload.message);
     }
 
     // check if we have a boom error that specified
@@ -169,7 +182,7 @@ function errorHandler(
       // check if this was a DNS error and if so
       // then set status code for retries appropriately
       err.status = 408;
-      err.message = translate(Boom.clientTimeout().output.payload);
+      err.message = translate(Boom.clientTimeout().output.payload.message);
     }
 
     if (!_isNumber(err.status)) err.status = 500;
@@ -210,7 +223,7 @@ function errorHandler(
     };
 
     switch (type) {
-      case 'html':
+      case 'html': {
         this.type = 'html';
 
         if (this.status === 404) {
@@ -291,14 +304,19 @@ function errorHandler(
         }
 
         break;
-      case 'json':
+      }
+
+      case 'json': {
         this.type = 'json';
         this.body = stringify(this.body, null, 2);
         break;
-      default:
+      }
+
+      default: {
         this.type = this.api ? 'json' : 'text';
         this.body = stringify(this.body, null, 2);
         break;
+      }
     }
 
     this.length = Buffer.byteLength(this.body);
@@ -310,14 +328,12 @@ function makeAPIFriendly(ctx, message) {
   return ctx.api
     ? convert(message, {
         wordwrap: false,
-        hideLinkHrefIfSameAsText: true,
         selectors: [
           {
             selector: 'a',
             options: {
-              baseUrl: process.env.ERROR_HANDLER_BASE_URL
-                ? process.env.ERROR_HANDLER_BASE_URL
-                : ''
+              hideLinkHrefIfSameAsText: true,
+              baseUrl: process.env.ERROR_HANDLER_BASE_URL || ''
             }
           },
           { selector: 'img', format: 'skip' }
