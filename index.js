@@ -129,19 +129,12 @@ function errorHandler(
     try {
       if (!err) return;
 
+      this.app.emit('error', err, this);
+
       // nothing we can do here other
       // than delegate to the app-level
       // handler and log.
-      if (this.headerSent || !this.writable) {
-        err.headerSent = true;
-        this.app.emit('error', err, this);
-        this.app.emit(
-          'error',
-          new Error('Headers were already sent, returning early'),
-          this
-        );
-        return;
-      }
+      if (this.headerSent || !this.writable) return;
 
       // translate messages
       const translate = (message) =>
@@ -242,8 +235,6 @@ function errorHandler(
       // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
       if (_isObject(err.headers) && Object.keys(err.headers).length > 0)
         this.set(err.headers);
-
-      this.app.emit('error', err, this);
 
       // fix page title and description
       const meta = {
