@@ -1,14 +1,15 @@
 const http = require('node:http');
 
 const Koa = require('koa');
+const MongooseError = require('mongoose/lib/error');
 const Router = require('@koa/router');
 const auth = require('koa-basic-auth');
 const getPort = require('get-port');
 const koa404Handler = require('koa-404-handler');
 const request = require('supertest');
 const test = require('ava');
-const { RedisError } = require('redis-errors');
-const MongooseError = require('mongoose/lib/error');
+const { MongoNetworkTimeoutError } = require('mongodb');
+const { InterruptError } = require('redis-errors');
 
 const errorHandler = require('..');
 
@@ -58,11 +59,15 @@ test.beforeEach(async (t) => {
   });
 
   router.get('/redis-error', (ctx) => {
-    ctx.throw(new RedisError('oops'));
+    ctx.throw(new InterruptError('oops'));
   });
 
   router.get('/mongoose-error', (ctx) => {
     ctx.throw(new MongooseError('oops'));
+  });
+
+  router.get('/mongodb-error', (ctx) => {
+    ctx.throw(new MongoNetworkTimeoutError('oops'));
   });
 
   // initialize routes on the app
@@ -122,5 +127,10 @@ test('throws 408 on redis error', async (t) => {
 
 test('throws 408 on mongoose error', async (t) => {
   const res = await t.context.app.get('/mongoose-error');
+  t.is(res.status, 408);
+});
+
+test('throws 408 on mongodb error', async (t) => {
+  const res = await t.context.app.get('/mongodb-error');
   t.is(res.status, 408);
 });

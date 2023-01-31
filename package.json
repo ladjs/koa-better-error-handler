@@ -66,6 +66,7 @@
     "koa-generic-session": "^2.3.0",
     "koa-redis": "^4.0.1",
     "lint-staged": "^13.1.0",
+    "mongodb": "^4.13.0",
     "mongoose": "^6.8.4",
     "nyc": "^15.1.0",
     "redis": "^4.5.1",

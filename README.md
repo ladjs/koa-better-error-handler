@@ -24,6 +24,8 @@
 ## Features
 
 * Detects Node.js DNS errors (e.g. `ETIMEOUT` and `EBADFAMILY`) and sends 408 Client Timeout error
+* Detects Mongoose errors and sends 408 Client Timeout error
+* Detects common programmer mistakes by detecting errors of TypeError, SyntaxError, ReferenceError, RangeError, URIError, and EvalError and yields generic "Internal Server Error" (only applies to production mode)
 * Detects Redis errors (e.g. ioredis' MaxRetriesPerRequestError) and sends 408 Client Timeout error
 * Uses [Boom][boom] for making error messages beautiful (see [User Friendly Responses](#user-friendly-responses) below)
 * Simply a better error handler (doesn't remove all headers [like the built-in one does][gh-issue])
