@@ -158,8 +158,15 @@ function errorHandler(
         err.message = translate(err.message);
       } else if (isErrorConstructorName(err, 'RedisError')) {
         // redis errors (e.g. ioredis' MaxRetriesPerRequestError)
-        err.status = 408;
-        err.message = translate(Boom.clientTimeout().output.payload.message);
+        //
+        // NOTE: we have to have 500 error here to prevent endless redirect loop
+        //
+        err.status = type === 'html' ? 504 : 408;
+        err.message = translate(
+          type === 'html'
+            ? Boom.gatewayTimeout().output.payload.message
+            : Boom.clientTimeout().output.payload.message
+        );
       } else if (passportLocalMongooseErrorNames.has(err.name)) {
         // passport-local-mongoose support
         if (!err.no_translate) err.message = translate(err.message);
@@ -179,8 +186,15 @@ function errorHandler(
         isErrorConstructorName(err, 'MongooseError')
       ) {
         // parse mongoose (and mongodb connection errors)
-        err.status = 408;
-        err.message = translate(Boom.clientTimeout().output.payload.message);
+        //
+        // NOTE: we have to have 500 error here to prevent endless redirect loop
+        //
+        err.status = type === 'html' ? 504 : 408;
+        err.message = translate(
+          type === 'html'
+            ? Boom.gatewayTimeout().output.payload.message
+            : Boom.clientTimeout().output.payload.message
+        );
       } else if (
         // prevent code related bugs from
         // displaying to users in production environments
