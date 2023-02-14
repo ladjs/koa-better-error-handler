@@ -126,6 +126,7 @@ function errorHandler(
 ) {
   // eslint-disable-next-line complexity
   return async function (err) {
+    const logger = useCtxLogger && this.logger ? this.logger : _logger;
     try {
       if (!err) return;
 
@@ -139,8 +140,6 @@ function errorHandler(
       // translate messages
       const translate = (message) =>
         _isFunction(this.request.t) ? this.request.t(message) : message;
-
-      const logger = useCtxLogger && this.logger ? this.logger : _logger;
 
       if (!_isError(err)) err = new Error(err);
 
@@ -357,7 +356,7 @@ function errorHandler(
         }
       }
     } catch (err) {
-      _logger.error(err);
+      logger.error(err);
       this.status = 500;
       this.body = 'Internal Server Error';
     }
