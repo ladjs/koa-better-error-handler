@@ -1,7 +1,6 @@
 const Koa = require('koa');
 const Router = require('koa-router');
 const koa404Handler = require('koa-404-handler');
-
 const errorHandler = require('..');
 
 // initialize our app

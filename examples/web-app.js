@@ -6,7 +6,6 @@ const flash = require('koa-connect-flash');
 const convert = require('koa-convert');
 const Router = require('koa-router');
 const koa404Handler = require('koa-404-handler');
-
 const errorHandler = require('..');
 
 // initialize our app

@@ -2,8 +2,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 const process = require('node:process');
 const { Buffer } = require('node:buffer');
-
-const co = require('co');
 const Boom = require('@hapi/boom');
 const camelCase = require('camelcase');
 const capitalize = require('capitalize');
@@ -12,15 +10,6 @@ const humanize = require('humanize-string');
 const statuses = require('statuses');
 const toIdentifier = require('toidentifier');
 const { convert } = require('html-to-text');
-
-// lodash
-const _isError = require('lodash.iserror');
-const _isFunction = require('lodash.isfunction');
-const _isNumber = require('lodash.isnumber');
-const _isObject = require('lodash.isobject');
-const _isString = require('lodash.isstring');
-const _map = require('lodash.map');
-const _values = require('lodash.values');
 
 // <https://github.com/nodejs/node/blob/08dd4b1723b20d56fbedf37d52e736fe09715f80/lib/dns.js#L296-L320>
 const DNS_RETRY_CODES = new Set([
@@ -53,6 +42,33 @@ const DNS_RETRY_CODES = new Set([
 const opts = {
   encoding: 'utf8'
 };
+
+// Helper functions to replace lodash dependencies
+function isError(value) {
+  return (
+    value instanceof Error ||
+    (typeof value === 'object' &&
+      value !== null &&
+      typeof value.message === 'string' &&
+      typeof value.name === 'string')
+  );
+}
+
+function isFunction(value) {
+  return typeof value === 'function';
+}
+
+function isNumber(value) {
+  return typeof value === 'number' && !Number.isNaN(value);
+}
+
+function isObject(value) {
+  return value !== null && typeof value === 'object';
+}
+
+function isString(value) {
+  return typeof value === 'string';
+}
 
 function isErrorConstructorName(err, name) {
   const names = [];
@@ -130,18 +146,34 @@ function errorHandler(
     try {
       if (!err) return;
 
-      this.app.emit('error', err, this);
+      if (!isError(err)) err = new Error(err);
+
+      // check if we have a boom error that specified
+      // a status code already for us (and then use it)
+      if (isObject(err.output) && isNumber(err.output.statusCode)) {
+        err.status = err.output.statusCode;
+      } else if (isString(err.code) && DNS_RETRY_CODES.has(err.code)) {
+        // check if this was a DNS error and if so
+        // then set status code for retries appropriately
+        err.status = 408;
+      }
+
+      if (!isNumber(err.status)) err.status = 500;
+
+      // set err.statusCode for consistency
+      err.statusCode = err.status;
 
       // nothing we can do here other
       // than delegate to the app-level
       // handler and log.
-      if (this.headerSent || !this.writable) return;
+      if (this.headerSent || !this.writable) {
+        this.app.emit('error', err, this);
+        return;
+      }
 
       // translate messages
       const translate = (message) =>
-        _isFunction(this.request.t) ? this.request.t(message) : message;
-
-      if (!_isError(err)) err = new Error(err);
+        isFunction(this.request.t) ? this.request.t(message) : message;
 
       const type = this.accepts(['text', 'json', 'html']);
 
@@ -151,7 +183,7 @@ function errorHandler(
       }
 
       const val = Number.parseInt(err.message, 10);
-      if (_isNumber(val) && val >= 400 && val < 600) {
+      if (isNumber(val) && val >= 400 && val < 600) {
         // check if we threw just a status code in order to keep it simple
         err = Boom[camelCase(toIdentifier(statuses.message[val]))]();
         err.message = translate(err.message);
@@ -209,32 +241,22 @@ function errorHandler(
         err.message = translate(Boom.internal().output.payload.message);
       }
 
-      // check if we have a boom error that specified
-      // a status code already for us (and then use it)
-      if (_isObject(err.output) && _isNumber(err.output.statusCode)) {
-        err.status = err.output.statusCode;
-      } else if (_isString(err.code) && DNS_RETRY_CODES.has(err.code)) {
-        // check if this was a DNS error and if so
-        // then set status code for retries appropriately
-        err.status = 408;
-        err.message = translate(Boom.clientTimeout().output.payload.message);
-      }
+      // finalize status code after all error type checks
+      err.status ||= 500;
+      err.statusCode = err.status;
 
-      if (!_isNumber(err.status)) err.status = 500;
+      // emit error event AFTER status code has been determined
+      // so that error listeners (e.g. loggers) have access to the correct status
+      this.app.emit('error', err, this);
 
       // check if there is flash messaging
-      const hasFlash = _isFunction(this.flash);
+      const hasFlash = isFunction(this.flash);
 
       // check if there is a view rendering engine binding `this.render`
-      const hasRender = _isFunction(this.render);
+      const hasRender = isFunction(this.render);
 
       // check if we're about to go into a possible endless redirect loop
       const noReferrer = this.get('Referrer') === '';
-
-      // populate the status and body with `boom` error message payload
-      // (e.g. you can do `ctx.throw(404)` and it will output a beautiful err obj)
-      err.status = err.status || 500;
-      err.statusCode = err.status;
       this.statusCode = err.statusCode;
       this.status = this.statusCode;
 
@@ -246,7 +268,7 @@ function errorHandler(
 
       // set any additional error headers specified
       // (e.g. for BasicAuth we use `basic-auth` which specifies WWW-Authenticate)
-      if (_isObject(err.headers) && Object.keys(err.headers).length > 0)
+      if (isObject(err.headers) && Object.keys(err.headers).length > 0)
         this.set(err.headers);
 
       // fix page title and description
@@ -304,9 +326,12 @@ function errorHandler(
               cookiesKey
             ) {
               try {
-                await co
-                  .wrap(this.sessionStore.set)
-                  .call(this.sessionStore, this.sessionId, this.session);
+                await new Promise((resolve, reject) => {
+                  this.sessionStore.set(this.sessionId, this.session, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                  });
+                });
                 this.cookies.set(
                   cookiesKey,
                   this.sessionId,
@@ -326,11 +351,16 @@ function errorHandler(
             //
             // if we're using `koa-session-store` we need to add
             // `this._session = new Session()`, and then run this:
-            await co.wrap(this._session._store.save).call(
-              this._session._store,
-              this._session._sid,
-              stringify(this.session)
-            );
+            await new Promise((resolve, reject) => {
+              this._session._store.save(
+                this._session._sid,
+                stringify(this.session),
+                (err) => {
+                  if (err) reject(err);
+                  else resolve();
+                }
+              );
+            });
             this.cookies.set(this._session._name, stringify({
               _sid: this._session._sid
             }), this._session._cookieOpts);
@@ -391,28 +421,31 @@ function makeAPIFriendly(ctx, message) {
 function parseValidationError(ctx, err, translate) {
   // transform the error messages to be humanized as adapted from:
   // https://github.com/niftylettuce/mongoose-validation-error-transform
-  err.errors = _map(err.errors, (error) => {
-    if (!_isString(error.path)) {
-      error.message = capitalize(error.message);
-      return error;
-    }
+  err.errors = Object.fromEntries(
+    Object.entries(err.errors).map(([key, error]) => {
+      if (!isString(error.path)) {
+        error.message = capitalize(error.message);
+        return [key, error];
+      }
 
-    error.message = error.message.replace(
-      new RegExp(error.path, 'g'),
-      humanize(error.path)
-    );
-    error.message = capitalize(error.message);
-    return error;
-  });
+      error.message = error.message.replaceAll(
+        new RegExp(error.path, 'g'),
+        humanize(error.path)
+      );
+      error.message = capitalize(error.message);
+      return [key, error];
+    })
+  );
 
   // loop over the errors object of the Validation Error
   // with support for HTML error lists
-  if (_values(err.errors).length === 1) {
-    err.message = _values(err.errors)[0].message;
+  const errorValues = Object.values(err.errors);
+  if (errorValues.length === 1) {
+    err.message = errorValues[0].message;
     if (!err.no_translate) err.message = translate(err.message);
   } else {
-    const errors = _map(_map(_values(err.errors), 'message'), (message) =>
-      err.no_translate ? message : translate(message)
+    const errors = errorValues.map((error) =>
+      err.no_translate ? error.message : translate(error.message)
     );
     err.message = makeAPIFriendly(
       ctx,
